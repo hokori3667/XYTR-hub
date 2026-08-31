@@ -1,0 +1,305 @@
+-- Rayfield Interface Suite Setup
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "XYTR main [by : hokori_ngot367]",
+   LoadingTitle = "Đang tải giao diện XYTR...",
+   LoadingSubtitle = "by hokori_ngot367",
+   ConfigurationSaving = {
+      Enabled = false,
+      FolderName = nil, 
+      FileName = "XYTRHub"
+   },
+   Discord = {
+      Enabled = false,
+      Invite = "noinvite",
+      RememberJoins = true
+   },
+   KeySystem = true, -- Bật hệ thống Key
+   KeySettings = {
+      Title = "XYTR Hub | Security",
+      Subtitle = "Nhập Key để sử dụng menu",
+      Note = "Liên hệ hokori_ngot367 trên TikTok để lấy key",
+      FileName = "XYTRKey",
+      SaveKey = true,
+      GrabKeyFromSite = false,
+      Key = {"XYTR 1336"}
+   }
+})
+
+-- Tab 1: script ftap
+local MainTab = Window:CreateTab("script ftap", 4483362458)
+local MainSection = MainTab:CreateSection("Danh Sách Script")
+
+MainTab:CreateButton({
+   Name = "Xocu Premium",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Xocu Premium",
+         Content = "Đang kích hoạt script với key: XYTR 1336...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/sladkoeshkaogg-svg/XOCU/main/XOCU.lua"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Xocu: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Synapse Lol",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Synapse Lol",
+         Content = "Đang kích hoạt Synapse Lol với key: XYTR 1336...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://gist.githubusercontent.com/kashnguyen/f7d3839d69afe14fa19e7e3ea79d862f/raw/028682f41231c2bc058d533041ce0e59e7621d4b/gistfile1.txt"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Synapse Lol: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Bloody Premium",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Bloody Premium",
+         Content = "Đang kích hoạt Bloody Premium với key: XYTR 1336...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/celestialteam/youhateme/refs/heads/main/BloodyPremiumCrack.lua"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Bloody Premium: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "gogg",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "gogg",
+         Content = "Đang kích hoạt gogg với key: XYTR 1336...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://rawscripts.net/raw/Fling-Things-and-People-GGOG-Script-165953"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script gogg: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Holon Hub (HoloX)",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Holon Hub",
+         Content = "Đang kích hoạt Holon Hub với key: XYTR 1336...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/hololove1021/HolonHUB/refs/heads/main/language/hub-vi.lua"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Holon Hub: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Tokada",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Tokada",
+         Content = "Đang kích hoạt Tokada với key: XYTR 1336...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/sladkoeshkaogg-svg/TokraUnlocked/refs/heads/main/Tokra.lua"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Tokada: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Cosmic Hub (cosmic123)",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Cosmic Hub",
+         Content = "Đang kích hoạt Cosmic Hub với key: XYTR 1336...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         getgenv().gethui = function() return game.CoreGui end
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/Jeffepicy/CosmicHub/refs/heads/main/CosmicHub",true))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Cosmic Hub: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "MTD Hub (MTDCLAN)",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "MTD Hub",
+         Content = "Đang kích hoạt MTD Hub với key: XYTR 1336...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/khang2012191-debug/MTDHUD/refs/heads/main/MTD"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script MTD Hub: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "POSRAL",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "POSRAL",
+         Content = "Đang kích hoạt POSRAL với key: XYTR 1336...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/sladkoeshkaogg-svg/Posral-Ftap.lua/refs/heads/main/posral.lua"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script POSRAL: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Sakura Hub",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Sakura Hub",
+         Content = "Đang kích hoạt Sakura Hub với key: XYTR 1336...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/SaturnGroup02/Sakura-Hub-main/refs/heads/main/Sakura%20main"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Sakura Hub: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "RuHub",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "RuHub",
+         Content = "Đang kích hoạt RuHub với key: XYTR 1336...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/sladkoeshkaogg-svg/RuScript/refs/heads/main/Ruhub.lua"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script RuHub: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "The Worst",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "The Worst",
+         Content = "Đang kích hoạt The Worst với key: XYTR 1336...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/cookiedevlopper-sketch/TheWorst/refs/heads/main/code.lua"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script The Worst: " .. tostring(err))
+      end
+   end,
+})
+
+-- Tab 2: Evade
+local EvadeTab = Window:CreateTab("Evade", 4483362458)
+local EvadeSection = EvadeTab:CreateSection("Evade Scripts")
+
+EvadeTab:CreateButton({
+   Name = "Yinyang Hub",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Yinyang Hub",
+         Content = "Đang kích hoạt Yinyang Hub cho Evade...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/linkyinyangg/beta/refs/heads/main/New"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Yinyang Hub: " .. tostring(err))
+      end
+   end,
+})
+
+-- Tab 3: Thông tin / Ghi chú ở cuối
+local InfoTab = Window:CreateTab("Thông Tin", 4483362458)
+local InfoSection = InfoTab:CreateSection("Ghi chú")
+
+InfoTab:CreateParagraph({Title = "Lời Nhắn", Content = "Thấy script ngon thì làm ny t nhá😘"})
+
+Rayfield:LoadConfiguration()

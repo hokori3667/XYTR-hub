@@ -1,0 +1,325 @@
+-- Rayfield Interface Suite Setup
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "XYTR main [by : hokori_ngot367]",
+   LoadingTitle = "XYTR UIを読み込み中...",
+   LoadingSubtitle = "by hokori_ngot367",
+   ConfigurationSaving = {
+      Enabled = false,
+      FolderName = nil, 
+      FileName = "XYTRHub"
+   },
+   Discord = {
+      Enabled = false,
+      Invite = "noinvite",
+      RememberJoins = true
+   },
+   KeySystem = true, -- キーシステムの有効化
+   KeySettings = {
+      Title = "XYTR Hub | Security",
+      Subtitle = "メニューを使用するにはキーを入力してください",
+      Note = "キーを取得するにはTikTokで hokori_ngot367 に連絡してください",
+      FileName = "XYTRKey",
+      SaveKey = true,
+      GrabKeyFromSite = false,
+      Key = {"XYTR 1336"}
+   }
+})
+
+-- Tab 1: script ftap (FTAPスクリプト)
+MainTab = Window:CreateTab("FTAP スクリプト", 4483362458)
+MainSection = MainTab:CreateSection("スクリプト一覧")
+
+MainTab:CreateButton({
+   Name = "Xocu Premium",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Xocu Premium",
+         Content = "キー: XYTR 1336 でスクリプトを有効化中...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/sladkoeshkaogg-svg/XOCU/main/XOCU.lua"))()
+      end)
+      
+      if not success then
+         warn("Xocu スクリプトのロードエラー: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Synapse Lol",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Synapse Lol",
+         Content = "キー: XYTR 1336 で Synapse Lol を有効化中...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://gist.githubusercontent.com/kashnguyen/f7d3839d69afe14fa19e7e3ea79d862f/raw/028682f41231c2bc058d533041ce0e59e7621d4b/gistfile1.txt"))()
+      end)
+      
+      if not success then
+         warn("Synapse Lol スクリプトのロードエラー: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Bloody Premium",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Bloody Premium",
+         Content = "キー: XYTR 1336 で Bloody Premium を有効化中...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/celestialteam/youhateme/refs/heads/main/BloodyPremiumCrack.lua"))()
+      end)
+      
+      if not success then
+         warn("Bloody Premium スクリプトのロードエラー: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "gogg",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "gogg",
+         Content = "キー: XYTR 1336 で gogg を有効化中...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://rawscripts.net/raw/Fling-Things-and-People-GGOG-Script-165953"))()
+      end)
+      
+      if not success then
+         warn("gogg スクリプトのロードエラー: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Holon Hub (HoloX)",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Holon Hub",
+         Content = "キー: XYTR 1336 で Holon Hub を有効化中...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/hololove1021/HolonHUB/refs/heads/main/language/hub-vi.lua"))()
+      end)
+      
+      if not success then
+         warn("Holon Hub スクリプトのロードエラー: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Tokada",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Tokada",
+         Content = "キー: XYTR 1336 で Tokada を有効化中...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/sladkoeshkaogg-svg/TokraUnlocked/refs/heads/main/Tokra.lua"))()
+      end)
+      
+      if not success then
+         warn("Tokada スクリプトのロードエラー: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Cosmic Hub (cosmic123)",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Cosmic Hub",
+         Content = "キー: XYTR 1336 で Cosmic Hub を有効化中...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         getgenv().gethui = function() return game.CoreGui end
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/Jeffepicy/CosmicHub/refs/heads/main/CosmicHub",true))()
+      end)
+      
+      if not success then
+         warn("Cosmic Hub スクリプトのロードエラー: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "MTD Hub (MTDCLAN)",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "MTD Hub",
+         Content = "キー: XYTR 1336 で MTD Hub を有効化中...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/khang2012191-debug/MTDHUD/refs/heads/main/MTD"))()
+      end)
+      
+      if not success then
+         warn("MTD Hub スクリプトのロードエラー: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "POSRAL",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "POSRAL",
+         Content = "キー: XYTR 1336 で POSRAL を有効化中...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/sladkoeshkaogg-svg/Posral-Ftap.lua/refs/heads/main/posral.lua"))()
+      end)
+      
+      if not success then
+         warn("POSRAL スクリプトのロードエラー: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Sakura Hub",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Sakura Hub",
+         Content = "キー: XYTR 1336 で Sakura Hub を有効化中...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/SaturnGroup02/Sakura-Hub-main/refs/heads/main/Sakura%20main"))()
+      end)
+      
+      if not success then
+         warn("Sakura Hub スクリプトのロードエラー: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "RuHub",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "RuHub",
+         Content = "キー: XYTR 1336 で RuHub を有効化中...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/sladkoeshkaogg-svg/RuScript/refs/heads/main/Ruhub.lua"))()
+      end)
+      
+      if not success then
+         warn("RuHub スクリプトのロードエラー: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "The Worst",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "The Worst",
+         Content = "キー: XYTR 1336 で The Worst を有効化中...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/cookiedevlopper-sketch/TheWorst/refs/heads/main/code.lua"))()
+      end)
+      
+      if not success then
+         warn("The Worst スクリプトのロードエラー: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Noname",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Noname",
+         Content = "キー: XYTR 1336 で Noname を有効化中...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/makiak13/Noame/refs/heads/main/best%20kickball"))()
+      end)
+      
+      if not success then
+         warn("Noname スクリプトのロードエラー: " .. tostring(err))
+      end
+   end,
+})
+
+-- Tab 2: Evade
+local EvadeTab = Window:CreateTab("Evade", 4483362458)
+local EvadeSection = EvadeTab:CreateSection("Evade スクリプト")
+
+EvadeTab:CreateButton({
+   Name = "Yinyang Hub",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Yinyang Hub",
+         Content = "Evade 用の Yinyang Hub を有効化中...",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/linkyinyangg/beta/refs/heads/main/New"))()
+      end)
+      
+      if not success then
+         warn("Yinyang Hub スクリプトのロードエラー: " .. tostring(err))
+      end
+   end,
+})
+
+-- Tab 3: Thông tin / Ghi chú ở cuối (情報 / メモ)
+local InfoTab = Window:CreateTab("情報", 4483362458)
+local InfoSection = InfoTab:CreateSection("メモ")
+
+InfoTab:CreateParagraph({Title = "メッセージ", Content = "スクリプトが良いと思ったら、私の恋人になってね😘"})
+
+Rayfield:LoadConfiguration()

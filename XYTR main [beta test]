@@ -1,0 +1,500 @@
+-- Rayfield Interface Suite Setup
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "XYTR main [beta test]",
+   LoadingTitle = "Đang tải giao diện XYTR...",
+   LoadingSubtitle = "by hokori_ngot367",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = "XYTRHubConfig", 
+      FileName = "KeySave"
+   },
+   Discord = {
+      Enabled = false,
+      Invite = "noinvite",
+      RememberJoins = true
+   },
+   KeySystem = true,
+   KeySettings = {
+      Title = "XYTR Hub | Security",
+      Subtitle = "Nhập Key để sử dụng menu",
+      Note = "t có đẹp trai k?",
+      FileName = "XYTRKey24h",
+      SaveKey = true,
+      GrabKeyFromSite = false,
+      Key = {"yes"}
+   },
+   Theme = {
+      TextColor = Color3.fromRGB(60, 40, 40),
+      Background = Color3.fromRGB(255, 240, 240), -- Nền đỏ nhạt (Hồng phấn sáng)
+      Topbar = Color3.fromRGB(255, 230, 230),
+      Shadow = Color3.fromRGB(220, 180, 180),
+      NotificationBackground = Color3.fromRGB(255, 245, 245),
+      NotificationActionsBackground = Color3.fromRGB(245, 225, 225),
+      TabBackground = Color3.fromRGB(250, 220, 220),
+      TabStroke = Color3.fromRGB(235, 190, 190),
+      TabBackgroundSelected = Color3.fromRGB(255, 255, 255),
+      TabTextColor = Color3.fromRGB(120, 40, 40),
+      SelectedTabTextColor = Color3.fromRGB(200, 40, 40),
+      ElementBackground = Color3.fromRGB(255, 250, 250),
+      ElementBackgroundHover = Color3.fromRGB(255, 235, 235),
+      SecondaryElementBackground = Color3.fromRGB(250, 230, 230),
+      ElementStroke = Color3.fromRGB(240, 200, 200),
+      ToggleBackground = Color3.fromRGB(240, 200, 200),
+      SearchBarBackground = Color3.fromRGB(255, 245, 245)
+   }
+})
+
+-- Tab 1: script ftap
+local MainTab = Window:CreateTab("script ftap", 4483362458)
+local MainSection = MainTab:CreateSection("Danh Sách Script")
+
+MainTab:CreateButton({
+   Name = "Poop Hub V4",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Poop Hub V4",
+         Content = "đợi tí bố m đang chạy script",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://rawscripts.net/raw/Fling-Things-and-People-PoopHub-V4-244125"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Poop Hub V4: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Blizt Hub",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Blizt Hub",
+         Content = "đợi tí bố m đang chạy script",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/BlizTBr/scripts/main/FTAP.lua"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Blizt Hub: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Xocu Premium",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Xocu Premium",
+         Content = "đợi tí bố m đang chạy script",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/sladkoeshkaogg-svg/XOCU/main/XOCU.lua"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Xocu: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Xocu Free",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Xocu Free",
+         Content = "đợi tí bố m đang chạy script",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/sladkoeshkaogg-svg/XOCOScript/refs/heads/main/XOCO.lua"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Xocu Free: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Synapse Lol",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Synapse Lol",
+         Content = "đợi tí bố m đang chạy script",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://gist.githubusercontent.com/kashnguyen/f7d3839d69afe14fa19e7e3ea79d862f/raw/028682f41231c2bc058d533041ce0e59e7621d4b/gistfile1.txt"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Synapse Lol: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Bloody Premium",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Bloody Premium",
+         Content = "đợi tí bố m đang chạy script",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/celestialteam/youhateme/refs/heads/main/BloodyPremiumCrack.lua"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Bloody Premium: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "gogg",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "gogg",
+         Content = "đợi tí bố m đang chạy script",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://rawscripts.net/raw/Fling-Things-and-People-GGOG-Script-165953"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script gogg: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Holon Hub (HoloX)",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Holon Hub",
+         Content = "đợi tí bố m đang chạy script",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/hololove1021/HolonHUB/refs/heads/main/language/hub-vi.lua"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Holon Hub: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Tokada",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Tokada",
+         Content = "đợi tí bố m đang chạy script",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/sladkoeshkaogg-svg/TokraUnlocked/refs/heads/main/Tokra.lua"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Tokada: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Cosmic Hub (cosmic123)",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Cosmic Hub",
+         Content = "đợi tí bố m đang chạy script",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         getgenv().gethui = function() return game.CoreGui end
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/Jeffepicy/CosmicHub/refs/heads/main/CosmicHub",true))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Cosmic Hub: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "MTD Hub (MTDCLAN)",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "MTD Hub",
+         Content = "đợi tí bố m đang chạy script",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/khang2012191-debug/MTDHUD/refs/heads/main/MTD"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script MTD Hub: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "POSRAL",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "POSRAL",
+         Content = "đợi tí bố m đang chạy script",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/sladkoeshkaogg-svg/Posral-Ftap.lua/refs/heads/main/posral.lua"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script POSRAL: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Sakura Hub",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Sakura Hub",
+         Content = "đợi tí bố m đang chạy script",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/SaturnGroup02/Sakura-Hub-main/refs/heads/main/Sakura%20main"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Sakura Hub: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "RuHub",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "RuHub",
+         Content = "đợi tí bố m đang chạy script",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/sladkoeshkaogg-svg/RuScript/refs/heads/main/Ruhub.lua"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script RuHub: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "The Worst",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "The Worst",
+         Content = "đợi tí bố m đang chạy script",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/cookiedevlopper-sketch/TheWorst/refs/heads/main/code.lua"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script The Worst: " .. tostring(err))
+      end
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Noname",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Noname",
+         Content = "đợi tí bố m đang chạy script",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/makiak13/Noame/refs/heads/main/best%20kickball"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Noname: " .. tostring(err))
+      end
+   end,
+})
+
+-- Tab 2: Evade
+local EvadeTab = Window:CreateTab("Evade", 4483362458)
+local EvadeSection = EvadeTab:CreateSection("Evade Scripts")
+
+EvadeTab:CreateButton({
+   Name = "Yinyang Hub",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Yinyang Hub",
+         Content = "đợi tí bố m đang chạy script",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/linkyinyangg/beta/refs/heads/main/New"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Yinyang Hub: " .. tostring(err))
+      end
+   end,
+})
+
+EvadeTab:CreateButton({
+   Name = "Rise Script (Mobile)",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Rise Script",
+         Content = "đợi tí bố m đang chạy script",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/ShadowBey01/Rise-Script/refs/heads/main/Fah/evade.lua"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Rise Script: " .. tostring(err))
+      end
+   end,
+})
+
+-- Tab 3: mm2
+local MM2Tab = Window:CreateTab("mm2", 4483362458)
+local MM2Section = MM2Tab:CreateSection("Murder Mystery 2 Scripts")
+
+MM2Tab:CreateButton({
+   Name = "Xena Hub",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Xena Hub",
+         Content = "đợi tí bố m đang chạy script",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/XenaScripts/MurderMystery2/refs/heads/main/ScriptV5.lua"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Xena Hub: " .. tostring(err))
+      end
+   end,
+})
+
+-- Tab 4: script universal
+local UniversalTab = Window:CreateTab("script universal", 4483362458)
+local UniversalSection = UniversalTab:CreateSection("Universal Scripts")
+
+UniversalTab:CreateButton({
+   Name = "Piano",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Piano",
+         Content = "đợi tí bố m đang chạy script",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://gist.githubusercontent.com/vukhanhtoan2907-lab/705658996e60d919a22cdc5dc0ce90d9/raw/gistfile1.txt"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Piano: " .. tostring(err))
+      end
+   end,
+})
+
+UniversalTab:CreateButton({
+   Name = "fly gui v3",
+   Callback = function()
+      Rayfield:Notify({
+         Title = "Fly Gui V3",
+         Content = "đợi tí bố m đang chạy script",
+         Duration = 4.5,
+         Image = 4483362458,
+      })
+      
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
+      end)
+      
+      if not success then
+         warn("Lỗi khi load script Fly Gui V3: " .. tostring(err))
+      end
+   end,
+})
+
+-- Tab 5: niggle
+local InfoTab = Window:CreateTab("niggle", 4483362458)
+local InfoSection = InfoTab:CreateSection("Credits & Thông Tin")
+
+InfoTab:CreateParagraph({
+   Title = "Bảng Credits", 
+   Content = "• Tác giả: hokori_ngot367\n• Test: baongu156\n• Con chó của t: heriken85\n• Phó credits: gemini flash-lite"
+})
+
+InfoTab:CreateParagraph({
+   Title = "Lời Nhắn", 
+   Content = "Thấy script ngon thì làm ny t nhá😘"
+})
+
+Rayfield:LoadConfiguration()

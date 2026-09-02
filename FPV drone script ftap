@@ -1,0 +1,809 @@
+-- ==========================================
+-- SCRIPT DRONE / MISSILE (MILITARY HUD - DISTRIBUTED UI)
+-- ==========================================
+
+local Players = game:GetService("Players")
+local RS = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+local Stats = game:GetService("Stats")
+local W = workspace
+local Cam = W.CurrentCamera
+local LP = Players.LocalPlayer
+
+local targetParent = LP:FindFirstChild("PlayerGui") or LP:WaitForChild("PlayerGui")
+
+local fly = false
+local mode = "FPV"
+local spd = 350
+local tpvD = 15
+local currentLang = "VI"
+local thermalActive = false
+
+local moveF, moveB, moveU, moveD = false, false, false, false
+local rollL, rollR = false, false
+
+local activePart = nil
+local activeBodyVel = nil
+local activeBodyGyro = nil
+local activeBodyForce = nil
+local touchedConn = nil
+local currentCF = CFrame.new()
+local activationTime = 0
+local originalTransparency = {}
+local coloredCharacters = {}
+local maxSpdAchieved = 0
+
+local texts = {
+    VI = {toggleOff = "DRONE: TẮT", toggleOn = "DRONE: BẬT", content = "• W/S/Nút: Tiến/Lùi\n• Q/E: Xoay Roll\n• Chuột/Vuốt: Xoay 360\n• Phím T: Bật/Tắt Cam Nhiệt"},
+    EN = {toggleOff = "DRONE: OFF", toggleOn = "DRONE: ON", content = "• W/S/Btns: Forward/Back\n• Q/E: Roll\n• Mouse/Touch: Free Look\n• Key T: Toggle Thermal"},
+    RU = {toggleOff = "ДРОН: ВЫКЛ", toggleOn = "ДРОН: ВКЛ", content = "• W/S/Кнопки: Вперед/Назад\n• Q/E: Крен\n• Свободный обзор\n• Клавиша T: Тепловизор"}
+}
+
+local SG = Instance.new("ScreenGui")
+SG.Name = "DroneTouchGui"
+SG.ResetOnSpawn = false
+SG.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+SG.DisplayOrder = 999999
+if syn and syn.protect_gui then syn.protect_gui(SG) end
+SG.Parent = targetParent
+
+local HUD = Instance.new("Frame", SG)
+HUD.Size = UDim2.new(1, 0, 1, 0)
+HUD.BackgroundTransparency = 1
+HUD.Visible = false
+
+local CC = Instance.new("ColorCorrectionEffect", game:GetService("Lighting"))
+CC.Name = "DroneThermalCC"
+CC.Enabled = false
+CC.Saturation = -1
+CC.Contrast = 1
+CC.Brightness = -0.3
+
+local NoiseFrame = Instance.new("Frame", HUD)
+NoiseFrame.Size = UDim2.new(1, 0, 1, 0)
+NoiseFrame.BackgroundTransparency = 0.95
+NoiseFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+NoiseFrame.BorderSizePixel = 0
+NoiseFrame.ZIndex = 5
+NoiseFrame.Visible = false
+
+local ScanlineContainer = Instance.new("Frame", HUD)
+ScanlineContainer.Size = UDim2.new(1, 0, 1, 0)
+ScanlineContainer.BackgroundTransparency = 1
+ScanlineContainer.ZIndex = 6
+
+local scanlines = {}
+for i = 1, 3 do
+    local line = Instance.new("Frame", ScanlineContainer)
+    line.Size = UDim2.new(1, 0, 0, math.random(1, 3))
+    line.Position = UDim2.new(0, 0, math.random(0, 100) / 100, 0)
+    line.BackgroundColor3 = Color3.fromRGB(100, 255, 100)
+    line.BackgroundTransparency = 0.5
+    line.BorderSizePixel = 0
+    line.ZIndex = 6
+    table.insert(scanlines, line)
+end
+
+local BtnThermal = Instance.new("TextButton", SG)
+BtnThermal.Size = UDim2.new(0, 120, 0, 32)
+BtnThermal.Position = UDim2.new(0.01, 0, 0.26, 0)
+BtnThermal.Text = "THERMAL: OFF"
+BtnThermal.TextColor3 = Color3.fromRGB(100, 255, 100)
+BtnThermal.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+BtnThermal.Font = Enum.Font.SourceSansBold
+BtnThermal.TextSize = 12
+BtnThermal.Visible = false
+Instance.new("UICorner", BtnThermal)
+
+-- ==========================================
+-- HỆ THỐNG TÂM NGẮM VUÔNG GÓC QUÂN SỰ
+-- ==========================================
+local CrossContainer = Instance.new("Frame", HUD)
+CrossContainer.Size = UDim2.new(0, 160, 0, 160)
+CrossContainer.Position = UDim2.new(0.5, -80, 0.5, -80)
+CrossContainer.BackgroundTransparency = 1
+CrossContainer.ZIndex = 7
+
+local CenterSquare = Instance.new("Frame", CrossContainer)
+CenterSquare.Size = UDim2.new(0, 36, 0, 36)
+CenterSquare.Position = UDim2.new(0.5, -18, 0.5, -18)
+CenterSquare.BackgroundColor3 = Color3.fromRGB(100, 255, 100)
+CenterSquare.BackgroundTransparency = 0.65
+CenterSquare.BorderSizePixel = 0
+CenterSquare.ZIndex = 7
+
+local function createSquareBorder(parentObj, sz, pos)
+    local f = Instance.new("Frame", parentObj)
+    f.Size = sz
+    f.Position = pos
+    f.BackgroundColor3 = Color3.fromRGB(100, 255, 100)
+    f.BorderSizePixel = 0
+    f.ZIndex = 8
+end
+createSquareBorder(CenterSquare, UDim2.new(1, 0, 0, 2), UDim2.new(0, 0, 0, 0))
+createSquareBorder(CenterSquare, UDim2.new(1, 0, 0, 2), UDim2.new(0, 0, 1, -2))
+createSquareBorder(CenterSquare, UDim2.new(0, 2, 1, 0), UDim2.new(0, 0, 0, 0))
+createSquareBorder(CenterSquare, UDim2.new(0, 2, 1, 0), UDim2.new(1, -2, 0, 0))
+
+local LeftMark = Instance.new("TextLabel", CrossContainer)
+LeftMark.Size = UDim2.new(0, 20, 0, 20)
+LeftMark.Position = UDim2.new(0.5, -46, 0.5, -10)
+LeftMark.Text = "-"
+LeftMark.TextColor3 = Color3.fromRGB(100, 255, 100)
+LeftMark.BackgroundTransparency = 1
+LeftMark.Font = Enum.Font.Code
+LeftMark.TextSize = 20
+LeftMark.ZIndex = 7
+
+local CenterMark = Instance.new("TextLabel", CrossContainer)
+CenterMark.Size = UDim2.new(0, 20, 0, 20)
+CenterMark.Position = UDim2.new(0.5, -10, 0.5, -10)
+CenterMark.Text = "•"
+CenterMark.TextColor3 = Color3.fromRGB(100, 255, 100)
+CenterMark.BackgroundTransparency = 1
+CenterMark.Font = Enum.Font.Code
+CenterMark.TextSize = 16
+CenterMark.ZIndex = 7
+
+local RightMark = Instance.new("TextLabel", CrossContainer)
+RightMark.Size = UDim2.new(0, 20, 0, 20)
+RightMark.Position = UDim2.new(0.5, 26, 0.5, -10)
+RightMark.Text = "-"
+RightMark.TextColor3 = Color3.fromRGB(100, 255, 100)
+RightMark.BackgroundTransparency = 1
+RightMark.Font = Enum.Font.Code
+RightMark.TextSize = 20
+RightMark.ZIndex = 7
+
+local BottomMark = Instance.new("TextLabel", CrossContainer)
+BottomMark.Size = UDim2.new(0, 20, 0, 20)
+BottomMark.Position = UDim2.new(0.5, -10, 0.5, 20)
+BottomMark.Text = "^"
+BottomMark.TextColor3 = Color3.fromRGB(100, 255, 100)
+BottomMark.BackgroundTransparency = 1
+BottomMark.Font = Enum.Font.Code
+BottomMark.TextSize = 16
+BottomMark.ZIndex = 7
+
+-- ==========================================
+-- CÁC THÔNG SỐ RẢI KHẮP MÀN HÌNH (GÓC & TRUNG TÂM)
+-- ==========================================
+
+-- 1. ROLL (Góc trên giữa màn hình)
+local CrossText = Instance.new("TextLabel", HUD)
+CrossText.Size = UDim2.new(0, 250, 0, 30)
+CrossText.Position = UDim2.new(0.5, -125, 0.05, 0)
+CrossText.Text = "[ ROLL: 0° | ACRO ]"
+CrossText.TextColor3 = Color3.fromRGB(100, 255, 100)
+CrossText.BackgroundTransparency = 1
+CrossText.Font = Enum.Font.Code
+CrossText.TextSize = 14
+CrossText.TextXAlignment = Enum.TextXAlignment.Center
+CrossText.ZIndex = 7
+
+-- 2. THANH PITCH & CLIMB (Góc dưới tâm màn hình)
+local HorizonBarContainer = Instance.new("Frame", HUD)
+HorizonBarContainer.Size = UDim2.new(0, 220, 0, 14)
+HorizonBarContainer.Position = UDim2.new(0.5, -110, 0.85, 0)
+HorizonBarContainer.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+HorizonBarContainer.BackgroundTransparency = 0.4
+HorizonBarContainer.BorderSizePixel = 0
+HorizonBarContainer.ZIndex = 7
+
+createSquareBorder(HorizonBarContainer, UDim2.new(1, 0, 0, 1), UDim2.new(0, 0, 0, 0))
+createSquareBorder(HorizonBarContainer, UDim2.new(1, 0, 0, 1), UDim2.new(0, 0, 1, -1))
+createSquareBorder(HorizonBarContainer, UDim2.new(0, 1, 1, 0), UDim2.new(0, 0, 0, 0))
+createSquareBorder(HorizonBarContainer, UDim2.new(0, 1, 1, 0), UDim2.new(1, -1, 0, 0))
+
+local HorizonIndicator = Instance.new("Frame", HorizonBarContainer)
+HorizonIndicator.Size = UDim2.new(0, 4, 1, 0)
+HorizonIndicator.Position = UDim2.new(0.5, -2, 0, 0)
+HorizonIndicator.BackgroundColor3 = Color3.fromRGB(100, 255, 100)
+HorizonIndicator.BorderSizePixel = 0
+HorizonIndicator.ZIndex = 8
+
+local HorizonLabel = Instance.new("TextLabel", HUD)
+HorizonLabel.Size = UDim2.new(0, 220, 0, 20)
+HorizonLabel.Position = UDim2.new(0.5, -110, 0.85, 18)
+HorizonLabel.Text = "PITCH: 0° | CLIMB: 0 s/s"
+HorizonLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+HorizonLabel.BackgroundTransparency = 1
+HorizonLabel.Font = Enum.Font.Code
+HorizonLabel.TextSize = 11
+HorizonLabel.TextXAlignment = Enum.TextXAlignment.Center
+HorizonLabel.ZIndex = 7
+
+-- 3. STATUS (Góc trên bên phải màn hình)
+local StatusHUD = Instance.new("TextLabel", HUD)
+StatusHUD.Size = UDim2.new(0, 250, 0, 50)
+StatusHUD.Position = UDim2.new(0.98, -250, 0.02, 0)
+StatusHUD.Text = "WIFI: [||||] 5G | BAT: 98%\nPING: 32ms | FPS: 60"
+StatusHUD.TextColor3 = Color3.fromRGB(100, 255, 100)
+StatusHUD.BackgroundTransparency = 1
+StatusHUD.Font = Enum.Font.Code
+StatusHUD.TextSize = 12
+StatusHUD.TextXAlignment = Enum.TextXAlignment.Right
+StatusHUD.ZIndex = 7
+
+-- 4. INFO CHI TIẾT (Góc dưới bên trái màn hình)
+local Info = Instance.new("TextLabel", HUD)
+Info.Size = UDim2.new(0, 350, 0, 120)
+Info.Position = UDim2.new(0.02, 0, 1, -130)
+Info.TextColor3 = Color3.fromRGB(100, 255, 100)
+Info.BackgroundTransparency = 1
+Info.Font = Enum.Font.Code
+Info.TextSize = 13
+Info.TextXAlignment = Enum.TextXAlignment.Left
+Info.TextYAlignment = Enum.TextYAlignment.Bottom
+Info.ZIndex = 7
+
+-- 5. TÊN ROCKET (Góc trên bên trái màn hình)
+local SwitchFrame = Instance.new("Frame", SG)
+SwitchFrame.Size = UDim2.new(0, 360, 0, 45)
+SwitchFrame.Position = UDim2.new(0.02, 0, 0.02, 0)
+SwitchFrame.BackgroundTransparency = 1
+SwitchFrame.Visible = false
+
+local OwnerLabel = Instance.new("TextLabel", SwitchFrame)
+OwnerLabel.Size = UDim2.new(1, 0, 1, 0)
+OwnerLabel.Position = UDim2.new(0, 0, 0, 0)
+OwnerLabel.Text = "Rocket Name"
+OwnerLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+OwnerLabel.BackgroundTransparency = 1
+OwnerLabel.Font = Enum.Font.Code
+OwnerLabel.TextSize = 13
+OwnerLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local BtnPrev = Instance.new("TextButton", SwitchFrame)
+BtnPrev.Size = UDim2.new(0, 30, 0, 30)
+BtnPrev.Position = UDim2.new(0, 0, 0, 25)
+BtnPrev.Text = "<"
+BtnPrev.TextColor3 = Color3.fromRGB(100, 255, 100)
+BtnPrev.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+BtnPrev.Font = Enum.Font.SourceSansBold
+BtnPrev.TextSize = 14
+Instance.new("UICorner", BtnPrev)
+
+local BtnNext = Instance.new("TextButton", SwitchFrame)
+BtnNext.Size = UDim2.new(0, 30, 0, 30)
+BtnNext.Position = UDim2.new(0, 35, 0, 25)
+BtnNext.Text = ">"
+BtnNext.TextColor3 = Color3.fromRGB(100, 255, 100)
+BtnNext.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+BtnNext.Font = Enum.Font.SourceSansBold
+BtnNext.TextSize = 14
+Instance.new("UICorner", BtnNext)
+
+-- ==========================================
+-- ĐIỀU KHIỂN & THANH TỐC ĐỘ
+-- ==========================================
+local CtlFrame = Instance.new("Frame", SG)
+CtlFrame.Size = UDim2.new(0, 130, 0, 130)
+CtlFrame.Position = UDim2.new(0.01, 0, 1, -145)
+CtlFrame.BackgroundTransparency = 1
+CtlFrame.Visible = false
+
+local function makeTouchBtn(txt, pos, sz)
+    local b = Instance.new("TextButton", CtlFrame)
+    b.Size = sz or UDim2.new(0, 36, 0, 36)
+    b.Position = pos
+    b.Text = txt
+    b.TextColor3 = Color3.fromRGB(100, 255, 100)
+    b.Font = Enum.Font.SourceSansBold
+    b.TextSize = 14
+    b.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    b.BackgroundTransparency = 0.3
+    Instance.new("UICorner", b)
+    return b
+end
+
+local BtnFwd = makeTouchBtn("▲", UDim2.new(0.35, 0, 0, 0))
+local BtnBwd = makeTouchBtn("▼", UDim2.new(0.35, 0, 0.7, 0))
+local BtnUp = makeTouchBtn("🔼", UDim2.new(0.72, 0, 0.35, 0))
+local BtnDn = makeTouchBtn("🔽", UDim2.new(0, 0, 0.35, 0))
+
+local function bindTouch(btn, pressFunc, releaseFunc)
+    btn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then pressFunc() end
+    end)
+    btn.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then releaseFunc() end
+    end)
+end
+
+bindTouch(BtnFwd, function() moveF = true end, function() moveF = false end)
+bindTouch(BtnBwd, function() moveB = true end, function() moveB = false end)
+bindTouch(BtnUp, function() moveU = true end, function() moveU = false end)
+bindTouch(BtnDn, function() moveD = true end, function() moveD = false end)
+
+local TogMobBtn = Instance.new("TextButton", SG)
+TogMobBtn.Size = UDim2.new(0, 90, 0, 25)
+TogMobBtn.Position = UDim2.new(0.01, 0, 1, -175)
+TogMobBtn.Text = "Hide UI"
+TogMobBtn.TextColor3 = Color3.fromRGB(100, 255, 100)
+TogMobBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+TogMobBtn.Font = Enum.Font.SourceSansBold
+TogMobBtn.TextSize = 12
+TogMobBtn.Visible = false
+Instance.new("UICorner", TogMobBtn)
+
+local mobVisible = true
+TogMobBtn.MouseButton1Click:Connect(function()
+    mobVisible = not mobVisible
+    CtlFrame.Visible = mobVisible and fly
+    TogMobBtn.Text = mobVisible and "Hide UI" or "Show UI"
+end)
+
+local SliderContainer = Instance.new("Frame", SG)
+SliderContainer.Size = UDim2.new(0, 28, 0, 210)
+SliderContainer.Position = UDim2.new(0.95, 0, 0.33, 0)
+SliderContainer.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+SliderContainer.BackgroundTransparency = 0.4
+SliderContainer.Visible = false
+
+createSquareBorder(SliderContainer, UDim2.new(1, 0, 0, 1), UDim2.new(0, 0, 0, 0))
+createSquareBorder(SliderContainer, UDim2.new(1, 0, 0, 1), UDim2.new(0, 0, 1, -1))
+createSquareBorder(SliderContainer, UDim2.new(0, 1, 1, 0), UDim2.new(0, 0, 0, 0))
+createSquareBorder(SliderContainer, UDim2.new(0, 1, 1, 0), UDim2.new(1, -1, 0, 0))
+
+local SliderTopLabel = Instance.new("TextLabel", SliderContainer)
+SliderTopLabel.Size = UDim2.new(0, 60, 0, 16)
+SliderTopLabel.Position = UDim2.new(0.5, -30, 0, -20)
+SliderTopLabel.Text = "SPEED"
+SliderTopLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+SliderTopLabel.BackgroundTransparency = 1
+SliderTopLabel.Font = Enum.Font.Code
+SliderTopLabel.TextSize = 11
+SliderTopLabel.TextXAlignment = Enum.TextXAlignment.Center
+
+local SliderFill = Instance.new("Frame", SliderContainer)
+SliderFill.Size = UDim2.new(1, 0, 0.6, 0)
+SliderFill.Position = UDim2.new(0, 0, 0.4, 0)
+SliderFill.BackgroundColor3 = Color3.fromRGB(100, 255, 100)
+SliderFill.BorderSizePixel = 0
+
+local SliderLabel = Instance.new("TextLabel", SliderContainer)
+SliderLabel.Size = UDim2.new(0, 80, 0, 20)
+SliderLabel.Position = UDim2.new(-85, 0, 0.4, 0)
+SliderLabel.Text = "350 SPD"
+SliderLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+SliderLabel.BackgroundTransparency = 1
+SliderLabel.Font = Enum.Font.Code
+SliderLabel.TextSize = 12
+SliderLabel.TextXAlignment = Enum.TextXAlignment.Right
+
+local draggingSlider = false
+local function updateSlider(input)
+    local posY = math.clamp(input.Position.Y - SliderContainer.AbsolutePosition.Y, 0, SliderContainer.AbsoluteSize.Y)
+    local pct = 1 - (posY / SliderContainer.AbsoluteSize.Y)
+    spd = math.floor(100 + pct * 500)
+    SliderFill.Size = UDim2.new(1, 0, pct, 0)
+    SliderFill.Position = UDim2.new(0, 0, 1 - pct, 0)
+    SliderLabel.Text = spd .. " SPD"
+end
+
+SliderContainer.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSlider = true; updateSlider(input) end
+end)
+UIS.InputChanged:Connect(function(input)
+    if draggingSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then updateSlider(input) end
+end)
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSlider = false end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if fly and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) and not draggingSlider then
+        local delta = input.Delta
+        local rotX = CFrame.Angles(0, -delta.X * 0.005, 0)
+        local rotY = CFrame.Angles(-delta.Y * 0.005, 0, 0)
+        currentCF = currentCF * rotX * rotY
+    end
+end)
+
+local function toggleThermalVision()
+    thermalActive = not thermalActive
+    if thermalActive then
+        BtnThermal.Text = "THERMAL: ON"
+        BtnThermal.TextColor3 = Color3.fromRGB(255, 255, 255)
+        CC.Enabled = true
+        NoiseFrame.Visible = true
+        for _, plr in pairs(Players:GetPlayers()) do
+            if plr.Character then
+                for _, obj in pairs(plr.Character:GetDescendants()) do
+                    if obj:IsA("BasePart") then
+                        coloredCharacters[obj] = obj.Color
+                        obj.Color = Color3.fromRGB(255, 255, 255)
+                        obj.Material = Enum.Material.Neon
+                    end
+                end
+            end
+        end
+    else
+        BtnThermal.Text = "THERMAL: OFF"
+        BtnThermal.TextColor3 = Color3.fromRGB(100, 255, 100)
+        CC.Enabled = false
+        NoiseFrame.Visible = false
+        for part, col in pairs(coloredCharacters) do
+            if part and part.Parent then
+                part.Color = col
+                part.Material = Enum.Material.SmoothPlastic
+            end
+        end
+        coloredCharacters = {}
+    end
+end
+BtnThermal.MouseButton1Click:Connect(toggleThermalVision)
+
+UIS.InputBegan:Connect(function(input, gpe)
+    if not fly then return end
+    if input.KeyCode == Enum.KeyCode.T then toggleThermalVision() end
+    if input.KeyCode == Enum.KeyCode.Comma or input.KeyCode == Enum.KeyCode.LeftBracket then switchMissile(-1)
+    elseif input.KeyCode == Enum.KeyCode.Period or input.KeyCode == Enum.KeyCode.RightBracket then switchMissile(1) end
+    if gpe then return end
+    if input.KeyCode == Enum.KeyCode.W then moveF = true end
+    if input.KeyCode == Enum.KeyCode.S then moveB = true end
+    if input.KeyCode == Enum.KeyCode.Q then rollL = true end
+    if input.KeyCode == Enum.KeyCode.E then rollR = true end
+end)
+UIS.InputEnded:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.W then moveF = false end
+    if input.KeyCode == Enum.KeyCode.S then moveB = false end
+    if input.KeyCode == Enum.KeyCode.Q then rollL = false end
+    if input.KeyCode == Enum.KeyCode.E then rollR = false end
+end)
+
+local Tog = Instance.new("TextButton", SG)
+Tog.Size = UDim2.new(0, 60, 0, 35)
+Tog.Position = UDim2.new(0.02, 0, 0.2, 0)
+Tog.Text = "DRONE"
+Tog.TextColor3 = Color3.fromRGB(100, 255, 100)
+Tog.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Tog.Active = true
+Tog.Draggable = true
+Instance.new("UICorner", Tog)
+
+local M = Instance.new("Frame", SG)
+M.Size = UDim2.new(0, 200, 0, 240)
+M.Position = UDim2.new(0.5, -100, 0.2, 0)
+M.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+M.Active = true
+M.Draggable = true
+M.Visible = true
+Instance.new("UICorner", M)
+
+Tog.MouseButton1Click:Connect(function() M.Visible = not M.Visible end)
+
+local function cB(t, p)
+    local b = Instance.new("TextButton", M)
+    b.Size = UDim2.new(0.9, 0, 0, 28)
+    b.Position = p
+    b.Text = t
+    b.TextColor3 = Color3.fromRGB(100, 255, 100)
+    b.Font = Enum.Font.SourceSansBold
+    b.TextSize = 12
+    b.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    Instance.new("UICorner", b)
+    return b
+end
+
+local BF = cB("DRONE: TẮT", UDim2.new(0.05, 0, 0.05, 0))
+BF.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+local BM = cB("MODE: FPV", UDim2.new(0.05, 0, 0.22, 0))
+
+local LangFrame = Instance.new("Frame", M)
+LangFrame.Size = UDim2.new(0.9, 0, 0, 30)
+LangFrame.Position = UDim2.new(0.05, 0, 0.39, 0)
+LangFrame.BackgroundTransparency = 1
+
+local function createLangBtn(name, posX)
+    local b = Instance.new("TextButton", LangFrame)
+    b.Size = UDim2.new(0, 50, 0, 26)
+    b.Position = UDim2.new(0, posX, 0, 0)
+    b.Text = name
+    b.TextColor3 = Color3.fromRGB(100, 255, 100)
+    b.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    b.Font = Enum.Font.SourceSansBold
+    b.TextSize = 12
+    Instance.new("UICorner", b)
+    return b
+end
+
+local btnVI = createLangBtn("VI", 0)
+local btnEN = createLangBtn("EN", 55)
+local btnRU = createLangBtn("RU", 110)
+
+local GuideTextLbl = Instance.new("TextLabel", M)
+GuideTextLbl.Size = UDim2.new(0.9, 0, 0, 90)
+GuideTextLbl.Position = UDim2.new(0.05, 0, 0.55, 0)
+GuideTextLbl.BackgroundTransparency = 1
+GuideTextLbl.TextColor3 = Color3.fromRGB(100, 255, 100)
+GuideTextLbl.Font = Enum.Font.SourceSans
+GuideTextLbl.TextSize = 11
+GuideTextLbl.TextXAlignment = Enum.TextXAlignment.Left
+GuideTextLbl.TextYAlignment = Enum.TextYAlignment.Top
+GuideTextLbl.TextWrapped = true
+GuideTextLbl.Text = texts[currentLang].content
+
+local function updateLang(lang)
+    currentLang = lang
+    BF.Text = fly and texts[lang].toggleOn or texts[lang].toggleOff
+    GuideTextLbl.Text = texts[lang].content
+end
+
+btnVI.MouseButton1Click:Connect(function() updateLang("VI") end)
+btnEN.MouseButton1Click:Connect(function() updateLang("EN") end)
+btnRU.MouseButton1Click:Connect(function() updateLang("RU") end)
+
+local function isPartValidMissile(part)
+    if not part:IsA("BasePart") or part.Anchored then return false end
+    if LP.Character and part:IsDescendantOf(LP.Character) then return false end
+    
+    local model = part:FindFirstAncestorOfClass("Model")
+    if model and (Players:GetPlayerFromCharacter(model) or model:FindFirstChildOfClass("Humanoid")) then return false end
+    if part:FindFirstAncestorOfClass("Accessory") or part:FindFirstAncestorOfClass("Tool") then return false end
+    if part.Size.Magnitude > 30 then return false end
+    return true
+end
+
+local function getAllMissiles()
+    local list = {}
+    for _, o in pairs(W:GetDescendants()) do if isPartValidMissile(o) then table.insert(list, o) end end
+    return list
+end
+
+local function getRocketOwnerName(part)
+    local model = part:FindFirstAncestorOfClass("Model")
+    if model then
+        local player = Players:GetPlayerFromCharacter(model)
+        if player then return "rocket by " .. player.Name end
+        for _, obj in pairs(model:GetChildren()) do
+            if obj:IsA("ObjectValue") and obj.Value and obj.Value:IsA("Player") then return "rocket by " .. obj.Value.Name
+            elseif obj:IsA("StringValue") and (obj.Name:lower():find("owner") or obj.Name:lower():find("creator")) then return "rocket by " .. obj.Value end
+        end
+        if model.Name and Players:FindFirstChild(model.Name) then return "rocket by " .. model.Name end
+    end
+    return "rocket by " .. LP.Name
+end
+
+local function triggerExplosion(pos, missilePart)
+    local p = Instance.new("Part")
+    p.Size = Vector3.new(1, 1, 1)
+    p.Position = pos
+    p.Transparency = 1
+    p.Anchored = true
+    p.CanCollide = false
+    p.Parent = W
+    
+    local fire = Instance.new("Fire", p)
+    fire.Size = 15
+    fire.Heat = 10
+    local smoke = Instance.new("Smoke", p)
+    smoke.Size = 25
+    smoke.RiseVelocity = 10
+    
+    if missilePart and missilePart:IsA("BasePart") then missilePart:Destroy() end
+    task.delay(1.5, function() p:Destroy() end)
+end
+
+local function restoreMissileTransparency()
+    for part, trans in pairs(originalTransparency) do if part and part.Parent then part.Transparency = trans end end
+    originalTransparency = {}
+end
+
+local function makeMissileInvisible(part)
+    restoreMissileTransparency()
+    local targetParts = part:FindFirstAncestorOfClass("Model") and part:FindFirstAncestorOfClass("Model"):GetDescendants() or {part}
+    for _, obj in pairs(targetParts) do
+        if obj:IsA("BasePart") then originalTransparency[obj] = obj.Transparency; obj.Transparency = 1 end
+    end
+end
+
+local function stopF(exploded, hitPos, missilePart)
+    fly = false
+    HUD.Visible = false
+    ScanlineContainer.Visible = false
+    BtnThermal.Visible = false
+    CtlFrame.Visible = false
+    SwitchFrame.Visible = false
+    SliderContainer.Visible = false
+    TogMobBtn.Visible = false
+    NoiseFrame.Visible = false
+    BF.Text = texts[currentLang].toggleOff
+    BF.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+    
+    restoreMissileTransparency()
+    if thermalActive then thermalActive = false; CC.Enabled = false; BtnThermal.Text = "THERMAL: OFF"; BtnThermal.TextColor3 = Color3.fromRGB(100, 255, 100) end
+    for part, col in pairs(coloredCharacters) do if part and part.Parent then part.Color = col; part.Material = Enum.Material.SmoothPlastic end end
+    coloredCharacters = {}
+    
+    if exploded and hitPos then triggerExplosion(hitPos, missilePart) end
+    if activeBodyVel then activeBodyVel:Destroy() end
+    if activeBodyGyro then activeBodyGyro:Destroy() end
+    if activeBodyForce then activeBodyForce:Destroy() end
+    if touchedConn then touchedConn:Disconnect() end
+    
+    activePart, activeBodyVel, activeBodyGyro, activeBodyForce, touchedConn = nil, nil, nil, nil, nil
+    currentVel = Vector3.zero
+    Cam.CameraType = Enum.CameraType.Custom
+    if LP.Character and LP.Character:FindFirstChild("Humanoid") then Cam.CameraSubject = LP.Character.Humanoid end
+end
+
+local function applyDronePhysics(part)
+    activePart = part
+    activationTime = tick()
+    currentVel = Vector3.zero
+    maxSpdAchieved = 0
+    
+    if LP.Character then
+        for _, joint in pairs(W:GetDescendants()) do
+            if joint:IsA("JointInstance") or joint:IsA("WeldConstraint") then
+                if (joint.Part0 and joint.Part0:IsDescendantOf(LP.Character)) or (joint.Part1 and joint.Part1:IsDescendantOf(LP.Character)) then
+                    if joint.Part0 == activePart or joint.Part1 == activePart or (activePart.Parent and (joint.Part0:IsDescendantOf(activePart.Parent) or joint.Part1:IsDescendantOf(activePart.Parent))) then
+                        joint:Destroy()
+                    end
+                end
+            end
+        end
+    end
+
+    makeMissileInvisible(activePart)
+    
+    local initDir = activePart.Velocity.Magnitude > 5 and activePart.Velocity.Unit or activePart.CFrame.LookVector
+    if initDir.Magnitude == 0 then initDir = Vector3.new(0, 0, -1) end
+    currentCF = CFrame.lookAt(activePart.Position, activePart.Position + initDir)
+
+    activeBodyVel = Instance.new("BodyVelocity", activePart)
+    activeBodyVel.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+    activeBodyVel.Velocity = Vector3.zero
+    
+    activeBodyGyro = Instance.new("BodyGyro", activePart)
+    activeBodyGyro.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
+    activeBodyGyro.P = 50000
+    
+    activeBodyForce = Instance.new("BodyForce", activePart)
+    activeBodyForce.Force = Vector3.new(0, activePart:GetMass() * W.Gravity, 0)
+    
+    touchedConn = activePart.Touched:Connect(function(hit)
+        if fly and (tick() - activationTime > 0.3) and not (LP.Character and hit:IsDescendantOf(LP.Character)) and not hit:IsDescendantOf(activePart) then
+            stopF(true, activePart.Position, activePart)
+        end
+    end)
+end
+
+local function switchMissile(direction)
+    local missiles = getAllMissiles()
+    if #missiles == 0 then return end
+    local currentIndex = 1
+    for i, m in ipairs(missiles) do if m == activePart then currentIndex = i; break end end
+    currentIndex = currentIndex + direction
+    if currentIndex > #missiles then currentIndex = 1 elseif currentIndex < 1 then currentIndex = #missiles end
+    local newPart = missiles[currentIndex]
+    if newPart and newPart ~= activePart then
+        restoreMissileTransparency()
+        if activeBodyVel then activeBodyVel:Destroy() end
+        if activeBodyGyro then activeBodyGyro:Destroy() end
+        if activeBodyForce then activeBodyForce:Destroy() end
+        if touchedConn then touchedConn:Disconnect() end
+        applyDronePhysics(newPart)
+    end
+end
+
+BtnPrev.MouseButton1Click:Connect(function() switchMissile(-1) end)
+BtnNext.MouseButton1Click:Connect(function() switchMissile(1) end)
+
+BF.MouseButton1Click:Connect(function()
+    fly = not fly
+    if fly then
+        local missiles, bestPart, shortestDist = getAllMissiles(), nil, math.huge
+        local originPos = (LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")) and LP.Character.HumanoidRootPart.Position or Cam.CFrame.Position
+        for _, o in pairs(missiles) do
+            local dist = (o.Position - originPos).Magnitude
+            if dist < shortestDist then shortestDist = dist; bestPart = o end
+        end
+        if bestPart then
+            HUD.Visible = true
+            ScanlineContainer.Visible = true
+            BtnThermal.Visible = true
+            CtlFrame.Visible = mobVisible
+            SwitchFrame.Visible = true
+            SliderContainer.Visible = true
+            TogMobBtn.Visible = true
+            if thermalActive then NoiseFrame.Visible = true end
+            BF.Text = texts[currentLang].toggleOn
+            BF.BackgroundColor3 = Color3.fromRGB(40, 180, 40)
+            applyDronePhysics(bestPart)
+        else stopF(false) end
+    else stopF(false) end
+end)
+
+BM.MouseButton1Click:Connect(function()
+    mode = (mode == "FPV" and "TPV" or "FPV")
+    BM.Text = "MODE: " .. mode
+end)
+
+local function getCardinalDirection(lookVector)
+    local x, z = lookVector.X, lookVector.Z
+    local angle = math.deg(math.atan2(-z, x))
+    if angle < 0 then angle = angle + 360 end
+    if angle >= 337.5 or angle < 22.5 then return "EAST (+X)"
+    elseif angle >= 22.5 and angle < 67.5 then return "NE"
+    elseif angle >= 67.5 and angle < 112.5 then return "NORTH (-Z)"
+    elseif angle >= 112.5 and angle < 157.5 then return "NW"
+    elseif angle >= 157.5 and angle < 202.5 then return "WEST (-X)"
+    elseif angle >= 202.5 and angle < 247.5 then return "SW"
+    elseif angle >= 247.5 and angle < 292.5 then return "SOUTH (+Z)"
+    elseif angle >= 292.5 and angle < 337.5 then return "SE"
+    end
+    return "NORTH"
+end
+
+RS.RenderStepped:Connect(function(dt)
+    if fly then
+        if activePart and activePart:IsDescendantOf(W) then
+            Cam.CameraType = Enum.CameraType.Scriptable
+            
+            if rollL then currentCF = currentCF * CFrame.Angles(0, 0, 2.5 * dt * 2) end
+            if rollR then currentCF = currentCF * CFrame.Angles(0, 0, -2.5 * dt * 2) end
+            
+            local moveVec = Vector3.zero
+            if moveF then moveVec = moveVec + currentCF.LookVector end
+            if moveB then moveVec = moveVec - currentCF.LookVector end
+            if moveU then moveVec = moveVec + currentCF.UpVector end
+            if moveD then moveVec = moveVec - currentCF.DownVector end
+
+            currentVel = currentVel:Lerp(moveVec.Magnitude > 0 and moveVec.Unit * spd or Vector3.zero, 0.15)
+            local currentSpd = math.floor(currentVel.Magnitude)
+            if currentSpd > maxSpdAchieved then maxSpdAchieved = currentSpd end
+
+            activeBodyVel.Velocity = currentVel
+            activeBodyGyro.CFrame = CFrame.new(activePart.Position) * currentCF.Rotation
+
+            for _, line in ipairs(scanlines) do line.Position = UDim2.new(0, 0, math.random(0, 100) / 100, 0) end
+            if thermalActive then
+                NoiseFrame.Visible = true
+                NoiseFrame.BackgroundTransparency = math.random(90, 97) / 100
+            else
+                NoiseFrame.Visible = false
+            end
+
+            local rx, ry, rz = currentCF:ToEulerAnglesXYZ()
+            local rollDeg = math.floor(math.deg(rz))
+            local pitchDeg = math.floor(math.deg(rx))
+            
+            CrossText.Text = string.format("[ ROLL: %+d° | ACRO ]", rollDeg)
+
+            local indicatorPos = math.clamp(0.5 + (rz / 1.5), 0.05, 0.95)
+            HorizonIndicator.Position = UDim2.new(indicatorPos, -2, 0, 0)
+            
+            local climbRate = math.floor(activePart.Velocity.Y)
+            HorizonLabel.Text = string.format("PITCH: %+d° | CLIMB: %+d s/s", pitchDeg, climbRate)
+
+            local pingVal = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+            local fpsVal = math.floor(1 / dt)
+            StatusHUD.Text = string.format("WIFI: [||||] 5G | BAT: 95%%\nPING: %dms | FPS: %d", pingVal, fpsVal)
+
+            local fDur = tick() - activationTime
+            OwnerLabel.Text = getRocketOwnerName(activePart)
+            
+            local altVal = math.floor(activePart.Position.Y)
+            local airTime = string.format("%.1fs", fDur)
+            local headingStr = getCardinalDirection(currentCF.LookVector)
+            local throttlePct = math.floor((currentSpd / spd) * 100)
+
+            Info.Text = string.format("ALT: %d studs | AIR: %s\nMAX: %d s/s | SPS: %d s/s\nTHR: %d%% | DIR: %s\nTEMP: %d°C | THERMAL: %s", 
+                altVal, airTime, maxSpdAchieved, currentSpd, throttlePct, headingStr, math.floor(35 + (currentSpd / 8) + (fDur * 1.8)), thermalActive and "ON" or "OFF"
+            )
+
+            local targetPos = activePart.Position
+            if mode == "FPV" then
+                Cam.CFrame = CFrame.new(targetPos) * currentCF.Rotation
+            else
+                local backVector = (CFrame.new(targetPos) * currentCF.Rotation).LookVector
+                Cam.CFrame = CFrame.lookAt(targetPos - backVector * tpvD + Vector3.new(0, 3, 0), targetPos)
+            end
+        else
+            stopF(false)
+        end
+    end
+end)

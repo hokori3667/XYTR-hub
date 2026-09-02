@@ -1,0 +1,1728 @@
+--[[
+    XYTR toy hub [Bản Hoàn Chỉnh]
+    Đội hình tháp thang / Bàn tay khổng lồ / Nút bàn tay / Hai bên song song / Mưa sao băng / Tab hướng dẫn
+]]
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+local LP = LocalPlayer
+
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/jadpy/suki/refs/heads/main/orion"))()
+
+local Theme = {
+    BackgroundColor = Color3.fromRGB(255, 255, 255),
+    SliderColor     = Color3.fromRGB(0, 0, 0),
+    TextColor       = Color3.fromRGB(0, 0, 0),
+}
+
+----------------------------------------------------------------
+-- Tên hiển thị tiếng Nhật ↔ ID (Đã chú thích tên tiếng Việt)
+----------------------------------------------------------------
+local ObjectDisplay = {
+    {jp = "Pháo hoa que (線香花火)",                id = "FireworkSparkler"},
+    {jp = "Pallet gỗ nhạt (薄い茶色パレット)",        id = "PalletLightBrown"},
+    {jp = "Hộp thủy tinh xám (グレーガラス箱)",          id = "GlassBoxGray"},
+    {jp = "Bàn phím âm nhạc (音楽キーボード)",          id = "MusicKeyboard"},
+    {jp = "Nến ma quái ① (不気味なロウソク①)",      id = "SpookyCandle1"},
+    {jp = "Tetracube (テトラキューブ)",          id = "Tetracube1"},
+    {jp = "Kiếm Ninja (忍者刀)",                  id = "NinjaKatana"},
+    {jp = "Hình nộm thế thân (おとり人形)",              id = "YouDecoy"},
+    {jp = "Tên lửa bom (爆弾ミサイル)",            id = "BombMissile"},
+    {jp = "Thang gỗ nhạt (薄い茶色ハシゴ)",          id = "LadderLightBrown"},
+    {jp = "Blobman (ブロブマン)",              id = "CreatureBlobman"},
+    {jp = "Bóng disco màu (ディスコカラーボール)",    id = "DiscoColorBall"},
+    {jp = "Pha lê khoáng sản hồng (ピンク鉱物クリスタル)",    id = "MineralCrystalPink"},
+    {jp = "Hòn đảo nổi (浮遊島)",                  id = "FloatingIsland"},
+    {jp = "UFO bay (飛行UFO)",                 id = "FlyingToyUfo"},
+    {jp = "Jukebox xanh dương (青ジュークボックス)",      id = "JukeboxBlue"},
+    {jp = "Jukebox cam (オレンジジュークボックス)",id = "JukeboxOrange"},
+    {jp = "Ghế sofa xanh (青ソファ)",                id = "CouchBlue"},
+    {jp = "Ghế sofa hồng (ピンクソファ)",            id = "CouchPink"},
+    {jp = "Ghế sofa trắng (白ソファ)",                id = "CouchWhite"},
+    {jp = "Boombox (ブームボックス)",          id = "Boombox"},
+    {jp = "Tên lửa pháo hoa (花火ミサイル)",            id = "FireworkMissile"},
+    {jp = "Bông tuyết (雪の結晶)",                id = "Snowflake"},
+    {jp = "Nến ma quái ⑤ (不気味なロウソク⑤)",      id = "SpookyCandle5"},
+    {jp = "Khoáng sản kim cương (ダイヤモンド鉱物)",        id = "MineralDiamond"},
+    {jp = "Máy kéo xanh lá (緑トラクター)",            id = "TractorGreen"},
+    {jp = "Máy kéo cam (オレンジトラクター)",      id = "TractorOrange"},
+    {jp = "Máy kéo đỏ (赤トラクター)",            id = "TractorRed"},
+}
+
+local function getJapaneseName(id)
+    for _, item in ipairs(ObjectDisplay) do
+        if item.id == id then return item.jp end
+    end
+    return id
+end
+
+----------------------------------------------------------------
+-- Định nghĩa hình dạng (Shapes)
+----------------------------------------------------------------
+local Shapes = {}
+
+Shapes["Hình tròn"] = function(i, count, t, cfg)
+    local a = (i-1)/count * math.pi*2 + t * cfg.Speed
+    return Vector3.new(math.cos(a)*cfg.Radius, cfg.Height, math.sin(a)*cfg.Radius)
+end
+
+Shapes["Đôi cánh"] = function(i, count, t, cfg)
+    local half = math.floor(count/2)
+    local x = (i - half - 0.5) * (cfg.Radius * 0.35)
+    local wave = math.sin(t * cfg.Speed + i*0.4) * cfg.Pulse * 2
+    return Vector3.new(x, cfg.Height + wave, -cfg.Radius * 0.6)
+end
+
+Shapes["Trái tim"] = function(i, count, t, cfg)
+    local a = (i-1)/count * math.pi*2 + t * cfg.Speed
+    local s = cfg.Radius / 16
+    local x = 16 * math.sin(a)^3 * s
+    local y = (13*math.cos(a) - 5*math.cos(2*a) - 2*math.cos(3*a) - math.cos(4*a)) * s
+    local pulse = 1 + math.sin(t*cfg.Speed*1.5)*cfg.Pulse*0.15
+    return Vector3.new(x*pulse, cfg.Height + y*pulse, 0)
+end
+
+Shapes["Trái tim lớn"] = function(i, count, t, cfg)
+    local a = (i-1)/count * math.pi*2 + t * cfg.Speed * 0.6
+    local s = cfg.Radius / 12
+    local x = 16 * math.sin(a)^3 * s
+    local y = (13*math.cos(a) - 5*math.cos(2*a) - 2*math.cos(3*a) - math.cos(4*a)) * s * 1.3
+    local pulse = 1 + math.sin(t*2)*cfg.Pulse*0.2
+    return Vector3.new(x*pulse, cfg.Height + y*pulse, 0)
+end
+
+Shapes["Ngôi sao David"] = function(i, count, t, cfg)
+    local a = (i-1)/6 * math.pi*2 + t * cfg.Speed
+    local r = cfg.Radius * (i%2==0 and 1 or 0.55)
+    local h = (i%2==0 and 1 or -1) * cfg.Pulse
+    return Vector3.new(math.cos(a)*r, cfg.Height + h, math.sin(a)*r)
+end
+
+Shapes["Ngôi sao 5 cánh"] = function(i, count, t, cfg)
+    local idx = (i-1) % 10
+    local isOuter = idx % 2 == 0
+    local a = idx * (math.pi / 5) + t * cfg.Speed
+    local r = isOuter and cfg.Radius or cfg.Radius * 0.4
+    local tw = 1 + math.sin(t*3 + i)*0.12
+    return Vector3.new(math.cos(a)*r*tw, cfg.Height, math.sin(a)*r*tw)
+end
+
+Shapes["Hình cầu"] = function(i, count, t, cfg)
+    local side = math.ceil(math.sqrt(count))
+    local lat = math.floor((i-1) / side)
+    local lon = (i-1) % side
+    local la = (lat / side - 0.5) * math.pi
+    local lo = lon / side * math.pi*2 + t * cfg.Speed
+    local r = cfg.Radius * (1 + math.sin(t*2)*cfg.Pulse*0.1)
+    return Vector3.new(
+        r * math.cos(la) * math.cos(lo),
+        cfg.Height + r * math.sin(la),
+        r * math.cos(la) * math.sin(lo)
+    )
+end
+
+Shapes["Đường xoắn ốc"] = function(i, count, t, cfg)
+    local a = (i-1)/count * math.pi*8 + t * cfg.Speed
+    local h = ((i-1)/count - 0.5) * cfg.Radius * 2.2
+    local r = cfg.Radius * 0.7
+    return Vector3.new(math.cos(a)*r, cfg.Height + h, math.sin(a)*r)
+end
+
+Shapes["Vô cực"] = function(i, count, t, cfg)
+    local a = (i-1)/count * math.pi*2 + t * cfg.Speed
+    local scale = cfg.Radius * 0.7
+    local x = scale * math.sin(a)
+    local z = scale * math.sin(a) * math.cos(a)
+    local y = math.sin(a*2) * cfg.Pulse
+    return Vector3.new(x, cfg.Height + y, z)
+end
+
+Shapes["Cánh hoa"] = function(i, count, t, cfg)
+    local a = (i-1)/count * math.pi*2 + t * cfg.Speed
+    local r = cfg.Radius * (0.4 + 0.6 * math.abs(math.sin(a * 6)))
+    local open = 1 + math.sin(t*1.2)*cfg.Pulse*0.3
+    return Vector3.new(math.cos(a)*r*open, cfg.Height + math.sin(a*3)*0.8, math.sin(a)*r*open)
+end
+
+Shapes["Kim tự tháp"] = function(i, count, t, cfg)
+    local layers = 4
+    local layer = math.floor((i-1) / (count/layers))
+    local inLayer = (i-1) % math.ceil(count/layers)
+    local layerCount = math.ceil(count/layers)
+    local a = inLayer / layerCount * math.pi*2 + t * cfg.Speed * 0.5
+    local r = cfg.Radius * (1 - layer/(layers-1)) * 0.9
+    local h = layer * (cfg.Radius * 0.55)
+    return Vector3.new(math.cos(a)*r, cfg.Height + h, math.sin(a)*r)
+end
+
+Shapes["Bánh donut"] = function(i, count, t, cfg)
+    local a = (i-1)/count * math.pi*2 + t * cfg.Speed
+    local tube = cfg.Radius * 0.28
+    local R = cfg.Radius * 0.75
+    local x = (R + tube * math.cos(a*3)) * math.cos(a)
+    local z = (R + tube * math.cos(a*3)) * math.sin(a)
+    local y = tube * math.sin(a*3)
+    return Vector3.new(x, cfg.Height + y, z)
+end
+
+Shapes["Gợn sóng"] = function(i, count, t, cfg)
+    local a = (i-1)/count * math.pi*2 + t * cfg.Speed
+    local wave = math.sin(a*3 + t*2) * cfg.Pulse * 3
+    return Vector3.new(math.cos(a)*cfg.Radius, cfg.Height + wave, math.sin(a)*cfg.Radius)
+end
+
+Shapes["Con bướm"] = function(i, count, t, cfg)
+    local a = (i-1)/count * math.pi*2
+    local wing = math.sin(t * cfg.Speed * 2)
+    local x = math.sin(a) * cfg.Radius * (0.6 + 0.4*math.abs(wing))
+    local z = math.cos(a) * cfg.Radius * 0.35
+    local y = math.sin(a*2) * cfg.Pulse + wing * 1.5
+    if a > math.pi then x = -x end
+    return Vector3.new(x, cfg.Height + y, z)
+end
+
+Shapes["Dải ngân hà"] = function(i, count, t, cfg)
+    local arm = (i % 3)
+    local a = (i-1)/count * math.pi*6 + t * cfg.Speed + arm * 2.1
+    local r = cfg.Radius * ((i-1)/count) ^ 0.7
+    local h = math.sin(a*2) * cfg.Pulse * 1.5
+    return Vector3.new(math.cos(a)*r, cfg.Height + h, math.sin(a)*r)
+end
+
+Shapes["Hình lập phương"] = function(i, count, t, cfg)
+    local edges = {
+        {1,1,1},{1,1,-1},{1,-1,1},{1,-1,-1},{-1,1,1},{-1,1,-1},{-1,-1,1},{-1,-1,-1}
+    }
+    local e1 = edges[((i-1)%8)+1]
+    local e2 = edges[(((i-1)+1)%8)+1]
+    local f = ((i-1)/count) % 1
+    local p = Vector3.new(
+        e1[1] + (e2[1]-e1[1])*f,
+        e1[2] + (e2[2]-e1[2])*f,
+        e1[3] + (e2[3]-e1[3])*f
+    ) * cfg.Radius * 0.7
+    local rot = CFrame.Angles(0, t*cfg.Speed, t*cfg.Speed*0.7)
+    return (rot * p) + Vector3.new(0, cfg.Height, 0)
+end
+
+Shapes["Tia chớp"] = function(i, count, t, cfg)
+    local seg = (i-1) / math.max(count-1, 1)
+    local x = (seg - 0.5) * cfg.Radius * 2
+    local z = math.sin(seg * 12 + t * cfg.Speed * 3) * cfg.Radius * 0.4
+    local y = math.abs(math.sin(seg * 8 + t*2)) * cfg.Pulse * 4
+    return Vector3.new(x, cfg.Height + y, z)
+end
+
+Shapes["Vòng phép thuật"] = function(i, count, t, cfg)
+    local a = (i-1)/count * math.pi*2 + t * cfg.Speed
+    local h = math.sin(a*4 + t) * cfg.Pulse * 0.8
+    return Vector3.new(math.cos(a)*cfg.Radius, cfg.Height + h, math.sin(a)*cfg.Radius)
+end
+
+Shapes["Vòng pháp thuật lục giác"] = function(i, count, t, cfg)
+    local a = (i-1)/count * math.pi*2 + t * cfg.Speed
+    local tri = (i % 6 < 3) and 1 or -1
+    local r = cfg.Radius * (0.7 + 0.3*math.sin(a*3))
+    return Vector3.new(math.cos(a)*r, cfg.Height + tri * cfg.Pulse, math.sin(a)*r)
+end
+
+Shapes["Vòng pháp thuật đa tầng"] = function(i, count, t, cfg)
+    local ring = math.floor((i-1) / (count/3))
+    local a = ((i-1) % (count/3)) / (count/3) * math.pi*2 + t * cfg.Speed * (1 + ring*0.3)
+    local r = cfg.Radius * (0.45 + ring * 0.28)
+    return Vector3.new(math.cos(a)*r, cfg.Height + ring * 1.2, math.sin(a)*r)
+end
+
+Shapes["Bóng hỗn mang"] = function(i, count, t, cfg)
+    local a = (i-1)/count * math.pi*2 + t * cfg.Speed * 2
+    local chaos = math.sin(t*3 + i)*cfg.Pulse*2
+    local r = cfg.Radius + chaos
+    local h = math.cos(t*2.5 + i*0.7) * cfg.Pulse * 3
+    return Vector3.new(math.cos(a)*r, cfg.Height + h, math.sin(a)*r)
+end
+
+Shapes["Xoắn ốc dâng cao"] = function(i, count, t, cfg)
+    local a = (i-1)/count * math.pi*10 + t * cfg.Speed
+    local rise = ((t * cfg.Speed * 0.4) + (i/count)) % 1
+    local h = rise * cfg.Radius * 2.5
+    local r = cfg.Radius * (1 - rise * 0.4)
+    return Vector3.new(math.cos(a)*r, cfg.Height + h, math.sin(a)*r)
+end
+
+Shapes["Vòng nổ"] = function(i, count, t, cfg)
+    local a = (i-1)/count * math.pi*2 + t * cfg.Speed * 0.5
+    local explode = (math.sin(t * cfg.Speed) + 1) * 0.5
+    local r = cfg.Radius * (0.3 + explode * 1.4)
+    local h = math.sin(a*2) * cfg.Pulse * explode * 2
+    return Vector3.new(math.cos(a)*r, cfg.Height + h, math.sin(a)*r)
+end
+
+-- Mưa sao băng
+Shapes["Mưa sao băng"] = function(i, count, t, cfg)
+    local a = (i-1)/count * math.pi*2 + t * cfg.Speed * 0.15
+    local depth = ((i + t * cfg.Speed * 8) % count) / count
+    local r = cfg.Radius * (0.15 + depth * 1.4)
+    local h = cfg.Height + depth * cfg.Radius * 3.5
+    local x = math.cos(a) * r
+    local z = math.sin(a) * r
+    return Vector3.new(x, h, z)
+end
+
+-- Hình dạng mạnh mẽ bổ sung
+Shapes["Hố đen"] = function(i, count, t, cfg)
+    local a = (i-1)/count * math.pi*8 + t * cfg.Speed * 2
+    local spiral = ((i-1)/count)
+    local r = cfg.Radius * (0.1 + spiral * 0.95)
+    local h = cfg.Height + math.sin(a*2) * cfg.Pulse * 1.5 - spiral * 2
+    return Vector3.new(math.cos(a)*r, h, math.sin(a)*r)
+end
+
+Shapes["Quỹ đạo Rồng"] = function(i, count, t, cfg)
+    local a = (i-1)/count * math.pi*6 + t * cfg.Speed
+    local wave1 = math.sin(a * 2.5) * cfg.Radius * 0.35
+    local wave2 = math.cos(a * 1.7) * cfg.Radius * 0.25
+    local h = cfg.Height + math.sin(a * 3 + t) * cfg.Pulse * 2.5
+    return Vector3.new(math.cos(a)*cfg.Radius + wave1, h, math.sin(a)*cfg.Radius + wave2)
+end
+
+Shapes["Mắt thần"] = function(i, count, t, cfg)
+    local a = (i-1)/count * math.pi*2 + t * cfg.Speed * 0.4
+    local eye = math.abs(math.sin(a * 2))
+    local r = cfg.Radius * (0.3 + eye * 0.7)
+    local h = cfg.Height + (1 - eye) * 3
+    return Vector3.new(math.cos(a)*r, h, math.sin(a)*r * 0.6)
+end
+
+Shapes["Bão tố"] = function(i, count, t, cfg)
+    local a = (i-1)/count * math.pi*10 + t * cfg.Speed * 1.5
+    local layer = math.floor((i-1) / (count/4))
+    local r = cfg.Radius * (0.3 + layer * 0.25)
+    local h = cfg.Height + math.sin(a + layer) * cfg.Pulse
+    return Vector3.new(math.cos(a)*r, h, math.sin(a)*r)
+end
+
+Shapes["Tháp thang đa tầng"] = function(i, count, t, cfg)
+    local layerCount = 5
+    local layer = math.floor((i-1) / (count / layerCount))
+    local inLayer = (i-1) % math.ceil(count / layerCount)
+    local layerSize = math.ceil(count / layerCount)
+    local a = (inLayer / layerSize) * math.pi * 2 + t * cfg.Speed
+
+    local r, h, tilt
+    local h1 = cfg.LadderH1 or 5.5
+    local h2 = cfg.LadderH2 or 2.0
+    local h3 = cfg.LadderH3 or 3.4
+    local h4 = cfg.LadderH4 or 1.6
+
+    if layer == 0 then
+        r = cfg.Radius * 1.38
+        h = cfg.Height - 2.2
+        tilt = 0.05
+    elseif layer == 1 then
+        r = cfg.Radius * 1.08
+        h = cfg.Height + h4
+        tilt = 1.35
+    elseif layer == 2 then
+        r = cfg.Radius * 0.78
+        h = cfg.Height + h3
+        tilt = 0.95
+    elseif layer == 3 then
+        r = cfg.Radius * 0.48
+        h = cfg.Height + h2
+        tilt = 1.42
+    else
+        r = cfg.Radius * 0.22
+        h = cfg.Height + h1
+        tilt = 0.65
+    end
+
+    local pulse = 1 + math.sin(t * 1.8 + layer) * cfg.Pulse * 0.08
+    r = r * pulse
+
+    local x = math.cos(a) * r
+    local z = math.sin(a) * r
+    return Vector3.new(x, h, z), tilt, a
+end
+
+Shapes["Tháp thang đa tầng (Cường hóa)"] = function(i, count, t, cfg)
+    local layerCount = 6
+    local layer = math.floor((i-1) / (count / layerCount))
+    local inLayer = (i-1) % math.ceil(count / layerCount)
+    local layerSize = math.ceil(count / layerCount)
+    local a = (inLayer / layerSize) * math.pi * 2 + t * cfg.Speed * 0.85
+
+    local r, h, tilt
+    local h1 = cfg.LadderH1 or 6.0
+    local h2 = cfg.LadderH2 or 2.2
+    local h3 = cfg.LadderH3 or 2.8
+    local h4 = cfg.LadderH4 or 1.2
+
+    if layer == 0 then
+        r = cfg.Radius * 1.45
+        h = cfg.Height - 2.5
+        tilt = 0.04
+    elseif layer == 1 then
+        r = cfg.Radius * 1.20
+        h = cfg.Height + h4
+        tilt = 1.30
+    elseif layer == 2 then
+        r = cfg.Radius * 0.95
+        h = cfg.Height + h3
+        tilt = 1.05
+    elseif layer == 3 then
+        r = cfg.Radius * 0.65
+        h = cfg.Height + 4.0
+        tilt = 1.38
+    elseif layer == 4 then
+        r = cfg.Radius * 0.40
+        h = cfg.Height + h2
+        tilt = 1.45
+    else
+        r = cfg.Radius * 0.18
+        h = cfg.Height + h1
+        tilt = 0.55
+    end
+
+    local pulse = 1 + math.sin(t * 2.1 + layer * 0.7) * cfg.Pulse * 0.1
+    r = r * pulse
+
+    local x = math.cos(a) * r
+    local z = math.sin(a) * r
+    return Vector3.new(x, h, z), tilt, a
+end
+
+Shapes["Bàn tay khổng lồ"] = function(i, count, t, cfg)
+    local handCount = cfg.HandCount or 5
+    local fingersPerHand = cfg.FingerCount or 5
+    local laddersPerFinger = math.max(3, math.floor(count / (handCount * fingersPerHand)))
+
+    local handIndex = math.floor((i-1) / (count / handCount))
+    local inHand = (i-1) % math.ceil(count / handCount)
+    local fingerIndex = math.floor(inHand / math.max(1, laddersPerFinger))
+    local inFinger = inHand % math.max(1, laddersPerFinger)
+
+    local handAngle = (handIndex / handCount) * math.pi * 2 + t * cfg.Speed * 0.3
+
+    local handRadius = cfg.Radius * 0.55
+    local handCenterX = math.cos(handAngle) * handRadius
+    local handCenterZ = math.sin(handAngle) * handRadius
+    local handBaseHeight = cfg.Height + 1.5
+
+    local fingerSpread = cfg.FingerSpread or 1.1
+    local fingerAngleOffset = (fingerIndex - (fingersPerHand-1)/2) * (fingerSpread / fingersPerHand)
+    local fingerAngle = handAngle + fingerAngleOffset + math.pi
+
+    local fingerProgress = inFinger / math.max(1, laddersPerFinger - 1)
+
+    local curve = math.sin(fingerProgress * math.pi * 0.9) * 0.6
+    local fingerLength = cfg.Radius * 0.7
+
+    local fx = handCenterX + math.cos(fingerAngle) * (fingerProgress * fingerLength)
+    local fz = handCenterZ + math.sin(fingerAngle) * (fingerProgress * fingerLength)
+    local fy = handBaseHeight + fingerProgress * 4.5 + curve * 2.2 + math.sin(t * 1.5 + handIndex) * cfg.Pulse * 0.4
+
+    local tilt = 0.9 - fingerProgress * 0.35
+
+    return Vector3.new(fx, fy, fz), tilt, fingerAngle
+end
+
+Shapes["Bàn tay khổng lồ (Dày đặc)"] = function(i, count, t, cfg)
+    local handCount = cfg.HandCount or 4
+    local fingersPerHand = cfg.FingerCount or 6
+    local laddersPerFinger = math.max(4, math.floor(count / (handCount * fingersPerHand)))
+
+    local handIndex = math.floor((i-1) / (count / handCount))
+    local inHand = (i-1) % math.ceil(count / handCount)
+    local fingerIndex = math.floor(inHand / math.max(1, laddersPerFinger))
+    local inFinger = inHand % math.max(1, laddersPerFinger)
+
+    local handAngle = (handIndex / handCount) * math.pi * 2 + t * cfg.Speed * 0.25
+
+    local handRadius = cfg.Radius * 0.5
+    local handCenterX = math.cos(handAngle) * handRadius
+    local handCenterZ = math.sin(handAngle) * handRadius
+    local handBaseHeight = cfg.Height + 2.0
+
+    local fingerSpread = cfg.FingerSpread or 1.35
+    local fingerAngleOffset = (fingerIndex - (fingersPerHand-1)/2) * (fingerSpread / fingersPerHand)
+    local fingerAngle = handAngle + fingerAngleOffset + math.pi
+
+    local fingerProgress = inFinger / math.max(1, laddersPerFinger - 1)
+    local sideOffset = ((i % 3) - 1) * 0.35
+
+    local curve = math.sin(fingerProgress * math.pi) * 0.85
+    local fingerLength = cfg.Radius * 0.85
+
+    local fx = handCenterX + math.cos(fingerAngle) * (fingerProgress * fingerLength) + math.cos(fingerAngle + math.pi/2) * sideOffset
+    local fz = handCenterZ + math.sin(fingerAngle) * (fingerProgress * fingerLength) + math.sin(fingerAngle + math.pi/2) * sideOffset
+    local fy = handBaseHeight + fingerProgress * 5.5 + curve * 2.8 + math.sin(t * 1.2 + handIndex * 0.8) * cfg.Pulse * 0.5
+
+    local tilt = 1.05 - fingerProgress * 0.4
+
+    return Vector3.new(fx, fy, fz), tilt, fingerAngle
+end
+
+local function dualSideOffset(i, count, t, cfg, side)
+    local mode = cfg.DualMode or "Nan hoa tròn"
+    local localCount = math.floor(count / 2)
+    local localI = ((i-1) % localCount) + 1
+    local sideOffsetX = side * (cfg.DualDistance or 8)
+
+    if mode == "Nan hoa tròn" then
+        local a = (localI-1)/localCount * math.pi*2 + t * cfg.Speed
+        local r = cfg.Radius * 0.7
+        local x = sideOffsetX + math.cos(a) * r
+        local z = math.sin(a) * r
+        local y = cfg.Height + math.sin(a*3 + t) * cfg.Pulse * 0.4
+        return Vector3.new(x, y, z)
+    elseif mode == "Ngôi sao" then
+        local a = (localI-1)/localCount * math.pi*2 + t * cfg.Speed
+        local r = cfg.Radius * (0.45 + 0.35 * math.abs(math.sin(a * 5)))
+        local x = sideOffsetX + math.cos(a) * r
+        local z = math.sin(a) * r
+        local y = cfg.Height
+        return Vector3.new(x, y, z)
+    elseif mode == "Tam giác xoay" then
+        local a = (localI-1)/localCount * math.pi*2 + t * cfg.Speed
+        local tri = math.abs(math.sin(a * 1.5))
+        local r = cfg.Radius * (0.5 + tri * 0.4)
+        local x = sideOffsetX + math.cos(a) * r
+        local z = math.sin(a) * r
+        local y = cfg.Height + math.sin(a*2) * cfg.Pulse * 0.6
+        return Vector3.new(x, y, z)
+    elseif mode == "Vòng kép" then
+        local ring = (localI % 2 == 0) and 1 or 0.55
+        local a = (localI-1)/localCount * math.pi*2 + t * cfg.Speed * (ring > 0.7 and 1 or -0.7)
+        local r = cfg.Radius * ring
+        local x = sideOffsetX + math.cos(a) * r
+        local z = math.sin(a) * r
+        local y = cfg.Height + (ring > 0.7 and 0.8 or -0.4)
+        return Vector3.new(x, y, z)
+    else
+        local a = (localI-1)/localCount * math.pi*2 + t * cfg.Speed
+        local r = cfg.Radius * 0.65
+        local x = sideOffsetX + math.cos(a) * r
+        local z = math.sin(a) * r
+        local y = cfg.Height
+        return Vector3.new(x, y, z)
+    end
+end
+
+Shapes["Hai bên song song"] = function(i, count, t, cfg)
+    local half = math.floor(count / 2)
+    local side = (i <= half) and -1 or 1
+    return dualSideOffset(i, count, t, cfg, side)
+end
+
+local modeList = {
+    "Hình tròn","Đôi cánh","Trái tim","Trái tim lớn","Ngôi sao David","Ngôi sao 5 cánh",
+    "Hình cầu","Đường xoắn ốc","Vô cực","Cánh hoa","Kim tự tháp","Bánh donut",
+    "Gợn sóng","Con bướm","Dải ngân hà","Hình lập phương","Tia chớp",
+    "Vòng phép thuật","Vòng pháp thuật lục giác","Vòng pháp thuật đa tầng",
+    "Bóng hỗn mang","Xoắn ốc dâng cao","Vòng nổ",
+    "Mưa sao băng","Hố đen","Quỹ đạo Rồng","Mắt thần","Bão tố",
+    "Tháp thang đa tầng","Tháp thang đa tầng (Cường hóa)",
+    "Hai bên song song"
+}
+
+local handModeList = {
+    "Bàn tay khổng lồ",
+    "Bàn tay khổng lồ (Dày đặc)"
+}
+
+----------------------------------------------------------------
+-- Hệ thống chuyên dụng cho Tay (Pallet + 5 thang)
+----------------------------------------------------------------
+local HandSystem = {
+    Enabled = false,
+    Assigned = {},
+    LoopConn = nil,
+    Time = 0,
+    Config = {
+        Height = 4,
+        Radius = 6,
+        Speed = 0.8,
+        FollowPlayer = true,
+    }
+}
+
+local function getPrimaryPart(model)
+    if not model then return nil end
+    if model.PrimaryPart then return model.PrimaryPart end
+    local names = {"Handle","Main","Part","Base","Sparkler","Firework","Blade","Candle","Keyboard","Box","Decoy","Missile","Ladder","Blob","Ball","Crystal","Island","Ufo","Jukebox","Couch","Boombox","Snowflake","Diamond","Tractor","Pallet"}
+    for _, n in ipairs(names) do
+        local p = model:FindFirstChild(n, true)
+        if p and p:IsA("BasePart") then return p end
+    end
+    for _, c in ipairs(model:GetDescendants()) do
+        if c:IsA("BasePart") then return c end
+    end
+    return nil
+end
+
+local function findSpecificObjects(id)
+    local list = {}
+    local seen = {}
+    local function add(model)
+        if model and model:IsA("Model") and model.Name == id then
+            if not seen[model] then
+                seen[model] = true
+                table.insert(list, model)
+            end
+        end
+    end
+
+    local myFolder = Workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
+    if myFolder then
+        for _, v in ipairs(myFolder:GetDescendants()) do add(v) end
+        for _, v in ipairs(myFolder:GetChildren()) do add(v) end
+    end
+
+    for _, folder in ipairs(Workspace:GetChildren()) do
+        if folder:IsA("Folder") or folder:IsA("Model") then
+            if string.find(folder.Name, "SpawnedInToys") or string.find(folder.Name, "Toys") then
+                for _, v in ipairs(folder:GetDescendants()) do add(v) end
+            end
+        end
+    end
+
+    if #list == 0 then
+        for _, v in ipairs(Workspace:GetDescendants()) do add(v) end
+    end
+    return list
+end
+
+local function attachPhysics(part)
+    if not part then return nil, nil end
+    local oldBG = part:FindFirstChildOfClass("BodyGyro")
+    local oldBP = part:FindFirstChildOfClass("BodyPosition")
+    if oldBG then oldBG:Destroy() end
+    if oldBP then oldBP:Destroy() end
+
+    local BP = Instance.new("BodyPosition")
+    BP.P = 25000
+    BP.D = 400
+    BP.MaxForce = Vector3.new(1e10, 1e10, 1e10)
+    BP.Parent = part
+
+    local BG = Instance.new("BodyGyro")
+    BG.P = 25000
+    BG.D = 400
+    BG.MaxTorque = Vector3.new(1e10, 1e10, 1e10)
+    BG.Parent = part
+    return BG, BP
+end
+
+local function stopHand()
+    if HandSystem.LoopConn then
+        HandSystem.LoopConn:Disconnect()
+        HandSystem.LoopConn = nil
+    end
+    for _, toy in ipairs(HandSystem.Assigned) do
+        if toy.BG then pcall(function() toy.BG:Destroy() end) end
+        if toy.BP then pcall(function() toy.BP:Destroy() end) end
+        if toy.Model then
+            for _, p in ipairs(toy.Model:GetDescendants()) do
+                if p:IsA("BasePart") then
+                    p.CanCollide = true
+                    p.CanTouch = true
+                end
+            end
+        end
+    end
+    HandSystem.Assigned = {}
+    HandSystem.Enabled = false
+end
+
+local function startHand()
+    stopHand()
+
+    local ladders = findSpecificObjects("LadderLightBrown")
+    local pallets = findSpecificObjects("PalletLightBrown")
+
+    if #ladders < 5 then
+        OrionLib:MakeNotification({
+            Name = "Thất bại",
+            Content = "Không đủ 5 chiếc thang (Hiện có " .. #ladders .. " chiếc)",
+            Time = 4
+        })
+        return
+    end
+    if #pallets < 1 then
+        OrionLib:MakeNotification({
+            Name = "Thất bại",
+            Content = "Thiếu 1 tấm pallet",
+            Time = 4
+        })
+        return
+    end
+
+    local palletModel = pallets[1]
+    local palletPart = getPrimaryPart(palletModel)
+    if palletPart then
+        for _, p in ipairs(palletModel:GetDescendants()) do
+            if p:IsA("BasePart") then
+                p.CanCollide = false
+                p.CanTouch = false
+                p.Anchored = false
+                pcall(function() p:SetNetworkOwner(LocalPlayer) end)
+            end
+        end
+        local BG, BP = attachPhysics(palletPart)
+        if BG and BP then
+            table.insert(HandSystem.Assigned, {
+                BG = BG, BP = BP, Part = palletPart, Model = palletModel,
+                IsPallet = true, FingerIndex = 0
+            })
+        end
+    end
+
+    for i = 1, 5 do
+        local model = ladders[i]
+        local part = getPrimaryPart(model)
+        if part then
+            for _, p in ipairs(model:GetDescendants()) do
+                if p:IsA("BasePart") then
+                    p.CanCollide = false
+                    p.CanTouch = false
+                    p.Anchored = false
+                    pcall(function() p:SetNetworkOwner(LocalPlayer) end)
+                end
+            end
+            local BG, BP = attachPhysics(part)
+            if BG and BP then
+                table.insert(HandSystem.Assigned, {
+                    BG = BG, BP = BP, Part = part, Model = model,
+                    IsPallet = false, FingerIndex = i
+                })
+            end
+        end
+    end
+
+    HandSystem.Enabled = true
+    HandSystem.Time = 0
+
+    HandSystem.LoopConn = RunService.RenderStepped:Connect(function(dt)
+        if not HandSystem.Enabled or not LocalPlayer.Character then return end
+        local torso = LocalPlayer.Character:FindFirstChild("Torso") or LocalPlayer.Character:FindFirstChild("UpperTorso")
+        if not torso then return end
+
+        HandSystem.Time = HandSystem.Time + dt
+        local center = HandSystem.Config.FollowPlayer and torso.Position or torso.Position
+        local baseHeight = HandSystem.Config.Height
+        local radius = HandSystem.Config.Radius
+        local t = HandSystem.Time
+
+        for _, toy in ipairs(HandSystem.Assigned) do
+            if toy.BP and toy.BG and toy.Part and toy.Part.Parent then
+                if toy.IsPallet then
+                    local target = center + Vector3.new(0, baseHeight + 1.2, -1.5)
+                    toy.BP.Position = target
+                    toy.BG.CFrame = CFrame.new(target) * CFrame.Angles(math.rad(-15), 0, 0)
+                else
+                    local fi = toy.FingerIndex
+                    local spread = 1.15
+                    local fingerAngle = (fi - 3) * (spread / 4)
+                    local progress = 0.35 + (fi % 2) * 0.08
+
+                    local len = radius * (0.9 + progress * 0.4)
+                    local curve = math.sin(progress * math.pi) * 1.8
+
+                    local fx = math.sin(fingerAngle) * len * 0.7
+                    local fz = -math.cos(fingerAngle) * len * 0.55 - 1.2
+                    local fy = baseHeight + 1.8 + progress * 3.8 + curve + math.sin(t * 1.3 + fi) * 0.25
+
+                    local target = center + Vector3.new(fx, fy, fz)
+
+                    local tilt = 0.75 - progress * 0.25
+                    local upright = math.clamp(tilt, 0, 1.2) / 1.2
+                    local pitch = math.rad(90 * (1 - upright))
+
+                    local cf = CFrame.new(target)
+                        * CFrame.Angles(0, fingerAngle + math.pi, 0)
+                        * CFrame.Angles(pitch, 0, 0)
+
+                    toy.BP.Position = target
+                    toy.BG.CFrame = cf
+                end
+            end
+        end
+    end)
+
+    OrionLib:MakeNotification({
+        Name = "Thành công",
+        Content = "Đã tạo bàn tay từ 1 pallet + 5 chiếc thang",
+        Time = 4
+    })
+end
+
+----------------------------------------------------------------
+-- Hệ thống xoay
+----------------------------------------------------------------
+local function createRotator(name)
+    local self = {
+        Name = name,
+        CurrentObjectID = "FireworkSparkler",
+        Config = {
+            Enabled      = false,
+            Mode         = "Hình tròn",
+            ObjectCount  = 100,
+            Radius       = 10,
+            Height       = 4,
+            Speed        = 1.8,
+            Pulse        = 0.6,
+            FollowPlayer = true,
+            FaceCenter   = true,
+            LadderH1     = 5.5,
+            LadderH2     = 2.0,
+            LadderH3     = 3.4,
+            LadderH4     = 1.6,
+            HandCount    = 5,
+            FingerCount  = 5,
+            FingerSpread = 1.1,
+            DualMode     = "Nan hoa tròn",
+            DualDistance = 8,
+        },
+        Assigned = {},
+        LoopConn = nil,
+        Time = 0,
+    }
+
+    local function getPrimaryPartLocal(model)
+        return getPrimaryPart(model)
+    end
+
+    local function findObjects()
+        local toys = {}
+        local seen = {}
+        local function add(model)
+            if model and model:IsA("Model") and model.Name == self.CurrentObjectID then
+                if not seen[model] then
+                    seen[model] = true
+                    table.insert(toys, model)
+                end
+            end
+        end
+
+        local myFolder = Workspace:FindFirstChild(LocalPlayer.Name .. "SpawnedInToys")
+        if myFolder then
+            for _, v in ipairs(myFolder:GetDescendants()) do add(v) end
+            for _, v in ipairs(myFolder:GetChildren()) do add(v) end
+        end
+
+        for _, folder in ipairs(Workspace:GetChildren()) do
+            if folder:IsA("Folder") or folder:IsA("Model") then
+                if string.find(folder.Name, "SpawnedInToys") or string.find(folder.Name, "Toys") then
+                    for _, v in ipairs(folder:GetDescendants()) do add(v) end
+                end
+            end
+        end
+
+        if #toys == 0 then
+            for _, v in ipairs(Workspace:GetDescendants()) do add(v) end
+        end
+        return toys
+    end
+
+    local function attachPhysicsLocal(part)
+        return attachPhysics(part)
+    end
+
+    local function stopLoop()
+        if self.LoopConn then
+            self.LoopConn:Disconnect()
+            self.LoopConn = nil
+        end
+        for _, toy in ipairs(self.Assigned) do
+            if toy.BG then pcall(function() toy.BG:Destroy() end) end
+            if toy.BP then pcall(function() toy.BP:Destroy() end) end
+            if toy.Model then
+                for _, p in ipairs(toy.Model:GetDescendants()) do
+                    if p:IsA("BasePart") then
+                        p.CanCollide = true
+                        p.CanTouch = true
+                    end
+                end
+            end
+        end
+        self.Assigned = {}
+    end
+
+    local function startLoop()
+        if self.LoopConn then self.LoopConn:Disconnect() end
+        self.Time = 0
+
+        self.LoopConn = RunService.RenderStepped:Connect(function(dt)
+            if not self.Config.Enabled or not LocalPlayer.Character then return end
+            local torso = LocalPlayer.Character:FindFirstChild("Torso") or LocalPlayer.Character:FindFirstChild("UpperTorso")
+            if not torso then return end
+
+            self.Time = self.Time + dt
+            local center = self.Config.FollowPlayer and torso.Position or torso.Position
+            local shapeFunc = Shapes[self.Config.Mode]
+            if not shapeFunc then return end
+
+            local count = #self.Assigned
+            for i, toy in ipairs(self.Assigned) do
+                if toy.BP and toy.BG and toy.Part and toy.Part.Parent then
+                    local result = {shapeFunc(i, count, self.Time, self.Config)}
+                    local offset = result[1]
+                    local target = center + offset
+
+                    toy.BP.Position = target
+
+                    if self.Config.Mode == "Tháp thang đa tầng" or self.Config.Mode == "Tháp thang đa tầng (Cường hóa)"
+                    or self.Config.Mode == "Bàn tay khổng lồ" or self.Config.Mode == "Bàn tay khổng lồ (Dày đặc)" then
+                        local tilt = result[2] or 1
+                        local angle = result[3] or 0
+                        local upright = math.clamp(tilt, 0, 1.5) / 1.5
+                        local pitch = math.rad(90 * (1 - upright))
+
+                        local cf = CFrame.new(target)
+                            * CFrame.Angles(0, angle + math.pi/2, 0)
+                            * CFrame.Angles(pitch, 0, 0)
+
+                        toy.BG.CFrame = cf
+                    else
+                        if self.Config.FaceCenter then
+                            toy.BG.CFrame = CFrame.lookAt(target, center)
+                        else
+                            toy.BG.CFrame = CFrame.new(target)
+                        end
+                    end
+                end
+            end
+        end)
+    end
+
+    local function applyToys()
+        stopLoop()
+        local toys = findObjects()
+        local max = math.min(#toys, self.Config.ObjectCount)
+        self.Assigned = {}
+
+        for i = 1, max do
+            local model = toys[i]
+            local part = getPrimaryPartLocal(model)
+            if part then
+                for _, p in ipairs(model:GetDescendants()) do
+                    if p:IsA("BasePart") then
+                        p.CanCollide = false
+                        p.CanTouch = false
+                        p.Anchored = false
+                        pcall(function() p:SetNetworkOwner(LocalPlayer) end)
+                    end
+                end
+                local BG, BP = attachPhysicsLocal(part)
+                if BG and BP then
+                    table.insert(self.Assigned, {BG = BG, BP = BP, Part = part, Model = model})
+                end
+            end
+        end
+
+        if self.Config.Enabled and #self.Assigned > 0 then
+            startLoop()
+        end
+        return #self.Assigned, #toys
+    end
+
+    function self.toggle(state)
+        self.Config.Enabled = state
+        if state then
+            local used, found = applyToys()
+            OrionLib:MakeNotification({
+                Name = self.Name .. " Bắt đầu",
+                Content = string.format("%s / %s / Dùng %d (Thấy %d)", self.Config.Mode, getJapaneseName(self.CurrentObjectID), used, found),
+                Time = 4
+            })
+        else
+            stopLoop()
+            OrionLib:MakeNotification({Name = self.Name .. " Dừng", Content = "Đã tắt", Time = 2})
+        end
+    end
+
+    function self.changeObject(id)
+        self.CurrentObjectID = id
+        if self.Config.Enabled then
+            local used, found = applyToys()
+            OrionLib:MakeNotification({
+                Name = self.Name .. " Đổi đồ chơi",
+                Content = string.format("%s → Dùng %d (Thấy %d)", getJapaneseName(id), used, found),
+                Time = 4
+            })
+        else
+            OrionLib:MakeNotification({
+                Name = self.Name .. " Đổi đồ chơi",
+                Content = "Đã đổi thành " .. getJapaneseName(id) .. " (Đang chờ)",
+                Time = 2
+            })
+        end
+    end
+
+    function self.changeMode(mode)
+        self.Config.Mode = mode
+        if self.Config.Enabled then
+            local used = applyToys()
+            OrionLib:MakeNotification({
+                Name = self.Name .. " Đổi chế độ",
+                Content = string.format("%s / Dùng %d", mode, used),
+                Time = 3
+            })
+        end
+    end
+
+    function self.forceRescan()
+        local used, found = applyToys()
+        OrionLib:MakeNotification({
+            Name = self.Name .. " Quét lại",
+            Content = string.format("Tìm thấy: %d / Đang dùng: %d", found, used),
+            Time = 4
+        })
+    end
+
+    function self.createUI(window)
+        local objTab = window:MakeTab({Name = self.Name .. " Đồ chơi", Icon = "rbxassetid://4483362458"})
+        objTab:AddLabel("※ Hãy lôi đồ chơi ra trước khi chọn")
+        for _, item in ipairs(ObjectDisplay) do
+            objTab:AddButton({
+                Name = item.jp,
+                Callback = function() self.changeObject(item.id) end
+            })
+        end
+
+        local mainTab = window:MakeTab({Name = self.Name .. " Điều khiển", Icon = "rbxassetid://4483362458"})
+
+        mainTab:AddToggle({
+            Name = "Bật xoay",
+            Default = false,
+            Callback = function(state) self.toggle(state) end
+        })
+
+        mainTab:AddToggle({
+            Name = "Đi theo người chơi",
+            Default = true,
+            Callback = function(v) self.Config.FollowPlayer = v end
+        })
+
+        mainTab:AddToggle({
+            Name = "Hướng vào tâm",
+            Default = true,
+            Callback = function(v) self.Config.FaceCenter = v end
+        })
+
+        mainTab:AddSection({Name = "Thông số"})
+
+        mainTab:AddSlider({
+            Name = "Số lượng vật phẩm tối đa (chọn 100 nếu muốn dùng hết)",
+            Min = 4, Max = 100, Default = 100,
+            Color = Theme.SliderColor, Increment = 1, ValueName = "cái",
+            Callback = function(v)
+                self.Config.ObjectCount = v
+                if self.Config.Enabled then applyToys() end
+            end
+        })
+
+        mainTab:AddSlider({
+            Name = "Bán kính", Min = 2, Max = 40, Default = 10,
+            Color = Theme.SliderColor, Increment = 0.5, ValueName = "stud",
+            Callback = function(v) self.Config.Radius = v end
+        })
+
+        mainTab:AddSlider({
+            Name = "Độ cao (Chuẩn chung)", Min = -20, Max = 50, Default = 4,
+            Color = Theme.SliderColor, Increment = 0.5, ValueName = "stud",
+            Callback = function(v) self.Config.Height = v end
+        })
+
+        mainTab:AddSection({Name = "Chỉnh độ cao Tháp thang đa tầng"})
+
+        mainTab:AddSlider({
+            Name = "Độ cao lớp giữa số 1", Min = -10, Max = 50, Default = 5.5,
+            Color = Theme.SliderColor, Increment = 0.5, ValueName = "stud",
+            Callback = function(v) self.Config.LadderH1 = v end
+        })
+
+        mainTab:AddSlider({
+            Name = "Độ cao lớp thứ 2", Min = -10, Max = 50, Default = 2.0,
+            Color = Theme.SliderColor, Increment = 0.5, ValueName = "stud",
+            Callback = function(v) self.Config.LadderH2 = v end
+        })
+
+        mainTab:AddSlider({
+            Name = "Độ cao lớp thứ 3", Min = -10, Max = 50, Default = 3.4,
+            Color = Theme.SliderColor, Increment = 0.5, ValueName = "stud",
+            Callback = function(v) self.Config.LadderH3 = v end
+        })
+
+        mainTab:AddSlider({
+            Name = "Độ cao lớp thứ 4", Min = -10, Max = 50, Default = 1.6,
+            Color = Theme.SliderColor, Increment = 0.5, ValueName = "stud",
+            Callback = function(v) self.Config.LadderH4 = v end
+        })
+
+        mainTab:AddSlider({
+            Name = "Tốc độ quay", Min = 0, Max = 12, Default = 1.8,
+            Color = Theme.SliderColor, Increment = 0.1, ValueName = "tốc độ",
+            Callback = function(v) self.Config.Speed = v end
+        })
+
+        mainTab:AddSlider({
+            Name = "Biên độ dao động", Min = 0, Max = 5, Default = 0.6,
+            Color = Theme.SliderColor, Increment = 0.1, ValueName = "",
+            Callback = function(v) self.Config.Pulse = v end
+        })
+
+        mainTab:AddButton({
+            Name = "Quét lại bắt buộc (Nhặt lại tất cả)",
+            Callback = function() self.forceRescan() end
+        })
+
+        local shapeTab = window:MakeTab({Name = self.Name .. " Hình dạng", Icon = "rbxassetid://4483362458"})
+        for _, modeName in ipairs(modeList) do
+            shapeTab:AddButton({
+                Name = modeName,
+                Callback = function() self.changeMode(modeName) end
+            })
+        end
+
+        local handTab = window:MakeTab({Name = self.Name .. " Tay khổng lồ", Icon = "rbxassetid://4483362458"})
+        handTab:AddLabel("※ Hãy lôi thật nhiều thang ra trước khi dùng")
+        handTab:AddLabel("※ Khuyên dùng số lượng vật phẩm từ 80–100")
+        handTab:AddSection({Name = "Chọn chế độ Bàn tay khổng lồ"})
+        for _, modeName in ipairs(handModeList) do
+            handTab:AddButton({
+                Name = modeName,
+                Callback = function() self.changeMode(modeName) end
+            })
+        end
+        handTab:AddSection({Name = "Thông số riêng Bàn tay"})
+        handTab:AddSlider({
+            Name = "Số lượng bàn tay", Min = 2, Max = 8, Default = 5,
+            Color = Theme.SliderColor, Increment = 1, ValueName = "bàn tay",
+            Callback = function(v) self.Config.HandCount = v end
+        })
+        handTab:AddSlider({
+            Name = "Số ngón trên mỗi tay", Min = 3, Max = 8, Default = 5,
+            Color = Theme.SliderColor, Increment = 1, ValueName = "ngón",
+            Callback = function(v) self.Config.FingerCount = v end
+        })
+        handTab:AddSlider({
+            Name = "Độ mở của ngón tay", Min = 0.5, Max = 2.5, Default = 1.1,
+            Color = Theme.SliderColor, Increment = 0.1, ValueName = "",
+            Callback = function(v) self.Config.FingerSpread = v end
+        })
+
+        local dualTab = window:MakeTab({Name = self.Name .. " Hai bên song song", Icon = "rbxassetid://4483362458"})
+        dualTab:AddLabel("Tạo 2 hình dạng ở hai bên cùng lúc")
+        dualTab:AddLabel("Bố trí ở hai bên nhân vật")
+        dualTab:AddButton({
+            Name = "▶ Bắt đầu Hai bên song song",
+            Callback = function()
+                self.Config.Mode = "Hai bên song song"
+                self.toggle(true)
+            end
+        })
+        dualTab:AddSection({Name = "Chọn mẫu hình dạng"})
+        local dualModes = {"Nan hoa tròn", "Ngôi sao", "Tam giác xoay", "Vòng kép"}
+        for _, m in ipairs(dualModes) do
+            dualTab:AddButton({
+                Name = m,
+                Callback = function()
+                    self.Config.DualMode = m
+                    self.Config.Mode = "Hai bên song song"
+                    if self.Config.Enabled then
+                        local used = applyToys()
+                        OrionLib:MakeNotification({
+                            Name = "Hai bên song song",
+                            Content = "Đổi thành " .. m .. " / Dùng " .. used,
+                            Time = 3
+                        })
+                    end
+                end
+            })
+        end
+        dualTab:AddSection({Name = "Thông số Hai bên song song"})
+        dualTab:AddSlider({
+            Name = "Khoảng cách hai bên", Min = 3, Max = 20, Default = 8,
+            Color = Theme.SliderColor, Increment = 0.5, ValueName = "stud",
+            Callback = function(v) self.Config.DualDistance = v end
+        })
+        dualTab:AddSlider({
+            Name = "Bán kính (Mỗi bên)", Min = 2, Max = 20, Default = 7,
+            Color = Theme.SliderColor, Increment = 0.5, ValueName = "stud",
+            Callback = function(v) self.Config.Radius = v end
+        })
+        dualTab:AddSlider({
+            Name = "Độ cao", Min = -10, Max = 30, Default = 4,
+            Color = Theme.SliderColor, Increment = 0.5, ValueName = "stud",
+            Callback = function(v) self.Config.Height = v end
+        })
+        dualTab:AddSlider({
+            Name = "Tốc độ quay", Min = 0, Max = 10, Default = 1.5,
+            Color = Theme.SliderColor, Increment = 0.1, ValueName = "",
+            Callback = function(v) self.Config.Speed = v end
+        })
+    end
+
+    return self
+end
+
+----------------------------------------------------------------
+-- Tạo 2 hệ thống xoay
+----------------------------------------------------------------
+local Rotator1 = createRotator("Xoay ①")
+local Rotator2 = createRotator("Xoay ②")
+
+Rotator2.Config.Radius = 14
+Rotator2.Config.Height = 7
+Rotator2.Config.Speed = 1.2
+Rotator2.Config.Mode = "Đường xoắn ốc"
+
+----------------------------------------------------------------
+-- Phá rào cản (Barrier Break)
+----------------------------------------------------------------
+local autoBarrierRunning = false
+local autoBarrierToggle = nil
+local autoBarrierNoTPRunning = false
+local autoBarrierNoTPToggle = nil
+
+local function executeBarrierBreak()
+    local playerName = LP.Name
+    local plotItems = Workspace:FindFirstChild("PlotItems")
+    if plotItems then
+        local playersInPlots = plotItems:FindFirstChild("PlayersInPlots")
+        if playersInPlots and playersInPlots:FindFirstChild(playerName) then
+            OrionLib:MakeNotification({Name = "⚠️ Lỗi", Content = "Vui lòng thực hiện bên ngoài nhà của bạn", Time = 3})
+            return false
+        end
+    end
+
+    autoBarrierRunning = true
+    local success, result = pcall(function()
+        if not LP.Character or not LP.Character:FindFirstChild("HumanoidRootPart") then
+            OrionLib:MakeNotification({Name = "⚠️ Lỗi", Content = "Không tìm thấy nhân vật", Time = 3})
+            return false
+        end
+        local humanoid = LP.Character:FindFirstChildOfClass("Humanoid")
+        if not humanoid then
+            OrionLib:MakeNotification({Name = "⚠️ Lỗi", Content = "Không tìm thấy Humanoid", Time = 3})
+            return false
+        end
+        local originalWalkSpeed = humanoid.WalkSpeed
+        local originalPosition = LP.Character.HumanoidRootPart.CFrame
+        humanoid.WalkSpeed = 0
+        if not ReplicatedStorage:FindFirstChild("MenuToys") then
+            humanoid.WalkSpeed = originalWalkSpeed
+            OrionLib:MakeNotification({Name = "⚠️ Lỗi", Content = "Không tìm thấy MenuToys", Time = 3})
+            return false
+        end
+        ReplicatedStorage.MenuToys.SpawnToyRemoteFunction:InvokeServer("InstrumentWoodwindOcarina", 
+            CFrame.new(184.148834, -5.54824972, 498.136749, 0.829037189, -0.214714944, 0.516328275, 0, 0.923344612, 0.383972496, -0.559193552, -0.318327487, 0.765486956), 
+            Vector3.new(0, 34, 0))
+        task.wait(0.4)
+        local toyFolder = Workspace:FindFirstChild(LP.Name .. "SpawnedInToys")
+        if not toyFolder or not toyFolder:FindFirstChild("InstrumentWoodwindOcarina") then
+            humanoid.WalkSpeed = originalWalkSpeed
+            OrionLib:MakeNotification({Name = "⚠️ Lỗi", Content = "Không tìm thấy Ocarina", Time = 3})
+            return false
+        end
+        local ocarina = toyFolder:FindFirstChild("InstrumentWoodwindOcarina")
+        if not ocarina or not ocarina:FindFirstChild("HoldPart") then
+            humanoid.WalkSpeed = originalWalkSpeed
+            OrionLib:MakeNotification({Name = "⚠️ Lỗi", Content = "Không tìm thấy HoldPart của Ocarina", Time = 3})
+            return false
+        end
+        ocarina.HoldPart.HoldItemRemoteFunction:InvokeServer(ocarina, Workspace[LP.Name])
+        if LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
+            LP.Character.HumanoidRootPart.CFrame = CFrame.new(304.06, 25.77, 488.54)
+        end
+        task.wait(0.21)
+        if toyFolder and toyFolder:FindFirstChild("InstrumentWoodwindOcarina") then
+            ReplicatedStorage.MenuToys.DestroyToy:FireServer(toyFolder.InstrumentWoodwindOcarina)
+        end
+        if LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
+            LP.Character.HumanoidRootPart.CFrame = originalPosition
+        end
+        task.wait(0.7)
+        ReplicatedStorage.MenuToys.SpawnToyRemoteFunction:InvokeServer("Campfire", 
+            CFrame.new(257.638672, -5.57392979, 450.103638, -0.950906992, -0.171067372, 0.257899135, 0, 0.833338678, 0.552762806, -0.309477001, 0.525626004, -0.79242748), 
+            Vector3.new(0, 161.9720001220703, 0))
+        task.wait(0.7)
+        local campfirePosition = Vector3.new(257.638672, -5.57392979, 450.103638)
+        local toyFolder2 = Workspace:FindFirstChild(LP.Name .. "SpawnedInToys")
+        if toyFolder2 and toyFolder2:FindFirstChild("Campfire") then
+            local campfire = toyFolder2:FindFirstChild("Campfire")
+            local primaryPart = campfire.PrimaryPart or campfire:FindFirstChildWhichIsA("BasePart")
+            if primaryPart then
+                local distance = (primaryPart.Position - campfirePosition).Magnitude
+                if distance < 10 then
+                    task.wait(1)
+                    humanoid.WalkSpeed = originalWalkSpeed
+                    OrionLib:MakeNotification({Name = "✅ Thành công", Content = "Phá rào cản thành công!", Time = 5})
+                    return true
+                end
+            end
+        end
+        humanoid.WalkSpeed = originalWalkSpeed
+        OrionLib:MakeNotification({Name = "⚠️ Thất bại", Content = "Đặt lửa trại thất bại", Time = 3})
+        return false
+    end)
+    if not success then
+        if LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
+            local humanoid = LP.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid then humanoid.WalkSpeed = 16 end
+        end
+        OrionLib:MakeNotification({Name = "❌ Lỗi", Content = "Lỗi thực thi: " .. tostring(result), Time = 3})
+        return false
+    end
+    autoBarrierRunning = false
+    return result
+end
+
+local function executeBarrierBreakNoTP()
+    local playerName = LP.Name
+    local plotItems = Workspace:FindFirstChild("PlotItems")
+    if plotItems then
+        local playersInPlots = plotItems:FindFirstChild("PlayersInPlots")
+        if playersInPlots and playersInPlots:FindFirstChild(playerName) then
+            OrionLib:MakeNotification({Name = "⚠️ Lỗi", Content = "Vui lòng thực hiện bên ngoài nhà", Time = 3})
+            return false
+        end
+    end
+    autoBarrierNoTPRunning = true
+    local success, err = pcall(function()
+        if not LP.Character or not LP.Character:FindFirstChild("HumanoidRootPart") then error("Không tìm thấy nhân vật") end
+        local humanoid = LP.Character:FindFirstChildOfClass("Humanoid")
+        if not humanoid then error("Không tìm thấy Humanoid") end
+        humanoid.WalkSpeed = 0
+        if not ReplicatedStorage:FindFirstChild("MenuToys") then humanoid.WalkSpeed = 16 error("Không tìm thấy MenuToys") end
+        local spawnResult = ReplicatedStorage.MenuToys.SpawnToyRemoteFunction:InvokeServer("InstrumentWoodwindOcarina", 
+            CFrame.new(184.148834, -5.54824972, 498.136749, 0.829037189, -0.214714944, 0.516328275, 0, 0.923344612, 0.383972496, -0.559193552, -0.318327487, 0.765486956), 
+            Vector3.new(0, 34, 0))
+        if not spawnResult then humanoid.WalkSpeed = 16 error("Lỗi khi spawn Ocarina") end
+        task.wait(0.4)
+        local toyFolder = Workspace:FindFirstChild(playerName .. "SpawnedInToys")
+        if not toyFolder then humanoid.WalkSpeed = 16 error("Không tìm thấy thư mục đồ chơi") end
+        local ocarina = toyFolder:FindFirstChild("InstrumentWoodwindOcarina")
+        if not ocarina then humanoid.WalkSpeed = 16 error("Không tìm thấy Ocarina") end
+        if not ocarina:FindFirstChild("HoldPart") then humanoid.WalkSpeed = 16 error("Không tìm thấy HoldPart của Ocarina") end
+        local holdResult = Workspace[playerName .. "SpawnedInToys"].InstrumentWoodwindOcarina.HoldPart.HoldItemRemoteFunction:InvokeServer(
+            Workspace[playerName .. "SpawnedInToys"].InstrumentWoodwindOcarina, Workspace[playerName])
+        if not holdResult then humanoid.WalkSpeed = 16 error("Lỗi khi cầm Ocarina") end
+        task.wait(0.2)
+        local dropResult = Workspace[playerName .. "SpawnedInToys"].InstrumentWoodwindOcarina.HoldPart.DropItemRemoteFunction:InvokeServer(
+            Workspace[playerName .. "SpawnedInToys"].InstrumentWoodwindOcarina, CFrame.new(304.06, 25.77, 488.54), Vector3.new(0, 70.48600006103516, 0))
+        if not dropResult then humanoid.WalkSpeed = 16 error("Lỗi khi thả Ocarina") end
+        task.wait(0.1)
+        if not Workspace:FindFirstChild(playerName .. "SpawnedInToys") then humanoid.WalkSpeed = 16 error("Thư mục đồ chơi đã biến mất") end
+        if not Workspace[playerName .. "SpawnedInToys"]:FindFirstChild("InstrumentWoodwindOcarina") then humanoid.WalkSpeed = 16 error("Ocarina đã biến mất") end
+        ReplicatedStorage.MenuToys.DestroyToy:FireServer(Workspace[playerName .. "SpawnedInToys"].InstrumentWoodwindOcarina)
+        task.wait(1.5)
+        local campfireSpawnResult = ReplicatedStorage.MenuToys.SpawnToyRemoteFunction:InvokeServer("Campfire", 
+            CFrame.new(257.638672, -5.57392979, 450.103638, -0.950906992, -0.171067372, 0.257899135, 0, 0.833338678, 0.552762806, -0.309477001, 0.525626004, -0.79242748), 
+            Vector3.new(0, 161.9720001220703, 0))
+        if not campfireSpawnResult then humanoid.WalkSpeed = 16 error("Lỗi khi spawn lửa trại") end
+        task.wait(1)
+        if not Workspace:FindFirstChild(playerName .. "SpawnedInToys") then humanoid.WalkSpeed = 16 error("Thư mục đồ chơi đã biến mất") end
+        if not Workspace[playerName .. "SpawnedInToys"]:FindFirstChild("Campfire") then humanoid.WalkSpeed = 16 error("Không tìm thấy lửa trại") end
+        humanoid.WalkSpeed = 16
+        OrionLib:MakeNotification({Name = "✅ Thành công", Content = "Phá rào cản thành công!", Time = 3})
+        return true
+    end)
+    if not success then
+        local humanoid = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then humanoid.WalkSpeed = 16 end
+        OrionLib:MakeNotification({Name = "❌ Thất bại", Content = tostring(err), Time = 3})
+        return false
+    end
+    autoBarrierNoTPRunning = false
+    return true
+end
+
+----------------------------------------------------------------
+-- Giao diện người dùng (UI)
+----------------------------------------------------------------
+local Window = OrionLib:MakeWindow({
+    Name = "XYTR toy hub [Bản Hoàn Chỉnh]",
+    HidePremium = false,
+    SaveConfig = false,
+    IntroEnabled = false,
+    ThemeColor = Theme.BackgroundColor,
+})
+
+Rotator1.createUI(Window)
+Rotator2.createUI(Window)
+
+-- Bàn tay (Pallet + 5 thang)
+local SimpleHandTab = Window:MakeTab({
+    Name = "Bàn tay (Pallet + Thang)",
+    Icon = "rbxassetid://4483362458",
+})
+SimpleHandTab:AddLabel("Lấy ra 5 chiếc thang + 1 pallet rồi bấm")
+SimpleHandTab:AddLabel("Pallet = Lòng bàn tay / 5 thang = Ngón tay")
+SimpleHandTab:AddButton({
+    Name = "▶ Tạo bàn tay (1 Nút)",
+    Callback = function() startHand() end
+})
+SimpleHandTab:AddButton({
+    Name = "■ Hủy bàn tay",
+    Callback = function()
+        stopHand()
+        OrionLib:MakeNotification({Name = "Đã hủy tay", Content = "Đã giải phóng cấu trúc bàn tay", Time = 2})
+    end
+})
+SimpleHandTab:AddSection({Name = "Thông số bàn tay"})
+SimpleHandTab:AddSlider({
+    Name = "Độ cao của tay", Min = -5, Max = 30, Default = 4,
+    Color = Theme.SliderColor, Increment = 0.5, ValueName = "stud",
+    Callback = function(v) HandSystem.Config.Height = v end
+})
+SimpleHandTab:AddSlider({
+    Name = "Độ dài ngón tay (Bán kính)", Min = 3, Max = 15, Default = 6,
+    Color = Theme.SliderColor, Increment = 0.5, ValueName = "stud",
+    Callback = function(v) HandSystem.Config.Radius = v end
+})
+SimpleHandTab:AddToggle({
+    Name = "Đi theo người chơi",
+    Default = true,
+    Callback = function(v) HandSystem.Config.FollowPlayer = v end
+})
+
+-- Phá rào cản
+local BarrierTab = Window:MakeTab({
+    Name = "Phá rào cản",
+    Icon = "rbxassetid://4483345998",
+})
+BarrierTab:AddButton({
+    Name = "Break Barrier (Chạy 1 lần)",
+    Callback = function() executeBarrierBreak() end
+})
+BarrierTab:AddSection({Name = "Tính năng tự động"})
+autoBarrierToggle = BarrierTab:AddToggle({
+    Name = "🔄 Tự động phá rào cản",
+    Default = false,
+    Callback = function(Value)
+        autoBarrierRunning = Value
+        if Value then
+            OrionLib:MakeNotification({Name = "▶️ Bắt đầu", Content = "Đang tự động thực hiện đến khi thành công", Time = 2})
+            task.spawn(function()
+                while autoBarrierRunning do
+                    local result = executeBarrierBreak()
+                    if result then
+                        if autoBarrierToggle then autoBarrierToggle:Set(false) end
+                        break
+                    end
+                    task.wait(1)
+                end
+            end)
+        else
+            OrionLib:MakeNotification({Name = "⏸️ Dừng", Content = "Đã dừng tự động phá rào cản", Time = 2})
+        end
+    end
+})
+BarrierTab:AddParagraph("Cách dùng", "・Thực hiện bên ngoài nhà\n・Tự động tắt khi thành công")
+BarrierTab:AddSection({Name = "Bản không dịch chuyển (Beta)"})
+BarrierTab:AddButton({
+    Name = "Break Barrier NoTP (Chạy 1 lần)",
+    Callback = function() executeBarrierBreakNoTP() end
+})
+autoBarrierNoTPToggle = BarrierTab:AddToggle({
+    Name = "🔄 Tự động phá rào cản NoTP (Beta)",
+    Default = false,
+    Callback = function(Value)
+        autoBarrierNoTPRunning = Value
+        if Value then
+            OrionLib:MakeNotification({Name = "▶️ Bắt đầu", Content = "Tự động chạy tới khi thành công", Time = 2})
+            task.spawn(function()
+                while autoBarrierNoTPRunning do
+                    local result = executeBarrierBreakNoTP()
+                    if result then
+                        if autoBarrierNoTPToggle then autoBarrierNoTPToggle:Set(false) end
+                        break
+                    end
+                    task.wait(1.5)
+                end
+            end)
+        else
+            OrionLib:MakeNotification({Name = "⏸️ Dừng", Content = "Đã dừng chạy tự động", Time = 2})
+        end
+    end
+})
+BarrierTab:AddParagraph("Lưu ý bản NoTP", "・Đây là bản thử nghiệm (Beta)\n・Tỷ lệ thành công có thể thấp hơn bản thường")
+
+----------------------------------------------------------------
+-- Tab Màu bầu trời
+----------------------------------------------------------------
+local Lighting = game:GetService("Lighting")
+local SkyTab = Window:MakeTab({
+    Name = "Màu bầu trời",
+    Icon = "rbxassetid://4483345998",
+})
+
+local function ensureAtmosphere()
+    local atmo = Lighting:FindFirstChildOfClass("Atmosphere")
+    if not atmo then
+        atmo = Instance.new("Atmosphere")
+        atmo.Parent = Lighting
+    end
+    return atmo
+end
+
+local function ensureSky()
+    local sky = Lighting:FindFirstChildOfClass("Sky")
+    if not sky then
+        sky = Instance.new("Sky")
+        sky.Parent = Lighting
+    end
+    return sky
+end
+
+local function setSkyPreset(name)
+    local atmo = ensureAtmosphere()
+    local sky = ensureSky()
+    if name == "Đêm" then
+        Lighting.ClockTime = 0
+        Lighting.Brightness = 0.5
+        Lighting.Ambient = Color3.fromRGB(20, 25, 45)
+        Lighting.OutdoorAmbient = Color3.fromRGB(15, 20, 40)
+        Lighting.FogColor = Color3.fromRGB(10, 15, 30)
+        Lighting.FogEnd = 800
+        atmo.Density = 0.35
+        atmo.Color = Color3.fromRGB(30, 40, 70)
+        atmo.Decay = Color3.fromRGB(10, 15, 30)
+        atmo.Glare = 0
+        atmo.Haze = 1.5
+        sky.SkyboxBk = "rbxassetid://6444884337"
+        sky.SkyboxDn = "rbxassetid://6444884337"
+        sky.SkyboxFt = "rbxassetid://6444884337"
+        sky.SkyboxLf = "rbxassetid://6444884337"
+        sky.SkyboxRt = "rbxassetid://6444884337"
+        sky.SkyboxUp = "rbxassetid://6444884337"
+        sky.StarCount = 3000
+    elseif name == "Đêm muộn" then
+        Lighting.ClockTime = 0
+        Lighting.Brightness = 0.2
+        Lighting.Ambient = Color3.fromRGB(5, 8, 20)
+        Lighting.OutdoorAmbient = Color3.fromRGB(3, 5, 15)
+        Lighting.FogColor = Color3.fromRGB(5, 8, 18)
+        Lighting.FogEnd = 500
+        atmo.Density = 0.45
+        atmo.Color = Color3.fromRGB(15, 20, 40)
+        atmo.Decay = Color3.fromRGB(5, 8, 18)
+        atmo.Glare = 0
+        atmo.Haze = 2.2
+        sky.StarCount = 5000
+    elseif name == "Hoàng hôn" then
+        Lighting.ClockTime = 18
+        Lighting.Brightness = 1.2
+        Lighting.Ambient = Color3.fromRGB(120, 60, 40)
+        Lighting.OutdoorAmbient = Color3.fromRGB(100, 50, 30)
+        Lighting.FogColor = Color3.fromRGB(180, 90, 50)
+        Lighting.FogEnd = 1200
+        atmo.Density = 0.25
+        atmo.Color = Color3.fromRGB(200, 100, 60)
+        atmo.Decay = Color3.fromRGB(150, 70, 40)
+        atmo.Glare = 0.3
+        atmo.Haze = 1.0
+        sky.StarCount = 0
+    elseif name == "Bầu trời xanh" then
+        Lighting.ClockTime = 14
+        Lighting.Brightness = 2
+        Lighting.Ambient = Color3.fromRGB(140, 160, 200)
+        Lighting.OutdoorAmbient = Color3.fromRGB(120, 140, 180)
+        Lighting.FogColor = Color3.fromRGB(180, 200, 230)
+        Lighting.FogEnd = 2000
+        atmo.Density = 0.15
+        atmo.Color = Color3.fromRGB(160, 180, 220)
+        atmo.Decay = Color3.fromRGB(100, 130, 180)
+        atmo.Glare = 0.1
+        atmo.Haze = 0.5
+        sky.StarCount = 0
+    elseif name == "Bầu trời đỏ" then
+        Lighting.ClockTime = 12
+        Lighting.Brightness = 1.5
+        Lighting.Ambient = Color3.fromRGB(180, 40, 40)
+        Lighting.OutdoorAmbient = Color3.fromRGB(150, 30, 30)
+        Lighting.FogColor = Color3.fromRGB(200, 50, 50)
+        Lighting.FogEnd = 900
+        atmo.Density = 0.3
+        atmo.Color = Color3.fromRGB(220, 60, 60)
+        atmo.Decay = Color3.fromRGB(160, 30, 30)
+        atmo.Glare = 0.2
+        atmo.Haze = 1.2
+        sky.StarCount = 0
+    elseif name == "Bầu trời tím" then
+        Lighting.ClockTime = 20
+        Lighting.Brightness = 0.8
+        Lighting.Ambient = Color3.fromRGB(80, 40, 120)
+        Lighting.OutdoorAmbient = Color3.fromRGB(60, 30, 100)
+        Lighting.FogColor = Color3.fromRGB(70, 30, 110)
+        Lighting.FogEnd = 1000
+        atmo.Density = 0.28
+        atmo.Color = Color3.fromRGB(100, 50, 150)
+        atmo.Decay = Color3.fromRGB(50, 20, 80)
+        atmo.Glare = 0.1
+        atmo.Haze = 1.3
+        sky.StarCount = 1500
+    elseif name == "Bầu trời xanh lá" then
+        Lighting.ClockTime = 12
+        Lighting.Brightness = 1.3
+        Lighting.Ambient = Color3.fromRGB(40, 120, 60)
+        Lighting.OutdoorAmbient = Color3.fromRGB(30, 100, 50)
+        Lighting.FogColor = Color3.fromRGB(50, 140, 70)
+        Lighting.FogEnd = 1100
+        atmo.Density = 0.25
+        atmo.Color = Color3.fromRGB(60, 150, 80)
+        atmo.Decay = Color3.fromRGB(30, 100, 50)
+        atmo.Glare = 0.1
+        atmo.Haze = 1.0
+        sky.StarCount = 0
+    elseif name == "Đặt lại" then
+        Lighting.ClockTime = 14
+        Lighting.Brightness = 2
+        Lighting.Ambient = Color3.fromRGB(140, 140, 140)
+        Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+        Lighting.FogColor = Color3.fromRGB(192, 192, 192)
+        Lighting.FogEnd = 100000
+        atmo.Density = 0.3
+        atmo.Color = Color3.fromRGB(199, 199, 199)
+        atmo.Decay = Color3.fromRGB(106, 112, 125)
+        atmo.Glare = 0
+        atmo.Haze = 0
+        sky.StarCount = 3000
+    end
+    OrionLib:MakeNotification({
+        Name = "Màu bầu trời",
+        Content = "Đã đổi thành " .. name,
+        Time = 2
+    })
+end
+
+SkyTab:AddLabel("Thay đổi nhanh bằng mẫu sẵn có")
+SkyTab:AddButton({Name = "Đêm (Tối như trong video)", Callback = function() setSkyPreset("Đêm") end})
+SkyTab:AddButton({Name = "Đêm muộn (Tối hơn nữa)", Callback = function() setSkyPreset("Đêm muộn") end})
+SkyTab:AddButton({Name = "Hoàng hôn", Callback = function() setSkyPreset("Hoàng hôn") end})
+SkyTab:AddButton({Name = "Bầu trời xanh", Callback = function() setSkyPreset("Bầu trời xanh") end})
+SkyTab:AddButton({Name = "Bầu trời đỏ", Callback = function() setSkyPreset("Bầu trời đỏ") end})
+SkyTab:AddButton({Name = "Bầu trời tím", Callback = function() setSkyPreset("Bầu trời tím") end})
+SkyTab:AddButton({Name = "Bầu trời xanh lá", Callback = function() setSkyPreset("Bầu trời xanh lá") end})
+SkyTab:AddButton({Name = "Đặt lại (Mặc định)", Callback = function() setSkyPreset("Đặt lại") end})
+
+SkyTab:AddSection({Name = "Tinh chỉnh chi tiết"})
+SkyTab:AddSlider({
+    Name = "Độ sáng", Min = 0, Max = 5, Default = 2,
+    Color = Theme.SliderColor, Increment = 0.1, ValueName = "",
+    Callback = function(v) Lighting.Brightness = v end
+})
+SkyTab:AddSlider({
+    Name = "Thời gian trong ngày (ClockTime)", Min = 0, Max = 24, Default = 14,
+    Color = Theme.SliderColor, Increment = 0.5, ValueName = "giờ",
+    Callback = function(v) Lighting.ClockTime = v end
+})
+SkyTab:AddSlider({
+    Name = "Độ dày sương mù (FogEnd)", Min = 100, Max = 5000, Default = 2000,
+    Color = Theme.SliderColor, Increment = 50, ValueName = "",
+    Callback = function(v) Lighting.FogEnd = v end
+})
+SkyTab:AddSlider({
+    Name = "Mật độ không gian (Atmosphere Density)", Min = 0, Max = 1, Default = 0.3,
+    Color = Theme.SliderColor, Increment = 0.05, ValueName = "",
+    Callback = function(v)
+        local atmo = ensureAtmosphere()
+        atmo.Density = v
+    end
+})
+SkyTab:AddSlider({
+    Name = "Số lượng ngôi sao", Min = 0, Max = 5000, Default = 3000,
+    Color = Theme.SliderColor, Increment = 100, ValueName = "sao",
+    Callback = function(v)
+        local sky = ensureSky()
+        sky.StarCount = v
+    end
+})
+
+-- ★★★ Tab Hướng dẫn ★★★
+local HelpTab = Window:MakeTab({
+    Name = "Hướng dẫn",
+    Icon = "rbxassetid://4483345998",
+})
+
+HelpTab:AddParagraph("Giới thiệu về Hub này",
+[[XYTR toy hub [Bản Hoàn Chỉnh]
+
+Script giúp bạn tự động nhặt các món đồ chơi đã đặt ra, sắp xếp chúng thành nhiều hình dạng khác nhau và cho phép xoay vòng.
+Có sẵn 2 hệ thống độc lập để bạn có thể chạy đồng thời 2 hình dạng hoặc loại đồ chơi khác nhau.]])
+
+HelpTab:AddParagraph("Cách dùng cơ bản",
+[[1. Lôi đồ chơi ra trước.
+2. Vào tab "Xoay ① Đồ chơi" để chọn món đồ bạn muốn dùng.
+3. Vào tab "Xoay ① Hình dạng" để chọn hình khối.
+4. Ở phần "Xoay ① Điều khiển", bật công tắc "Bật xoay".
+
+Bạn có thể làm tương tự với Xoay ② để chạy đồng thời 2 loại cùng lúc.]])
+
+HelpTab:AddParagraph("Giải thích các nút điều khiển",
+[[・Bật xoay → Bật/Tắt hoạt động
+・Đi theo người chơi → Đồ chơi tự bám theo vị trí của bạn
+・Hướng vào tâm → Đồ chơi quay mặt về hướng trung tâm
+・Số lượng vật phẩm tối đa → Giới hạn số đồ nhặt (chọn 100 để dùng tất cả)
+・Bán kính → Độ rộng của vòng xoay
+・Độ cao → Vị trí cao thấp
+・Tốc độ quay → Tốc độ xoay nhanh chậm
+・Biên độ dao động → Độ nhún nhảy/gợn sóng
+・Quét lại bắt buộc → Nhặt lại toàn bộ đồ chơi từ đầu]])
+
+HelpTab:AddParagraph("Về Tháp thang đa tầng",
+[[Hình dạng vòng phép thuật xếp từ nhiều lớp thang chồng lên nhau.
+Bạn có thể tùy chỉnh độ cao của từng lớp từ trong phần thanh trượt tương ứng.]])
+
+HelpTab:AddParagraph("Về Bàn tay khổng lồ",
+[[Khi bạn lôi ra một lượng lớn thang, chúng sẽ tạo thành những bàn tay khổng lồ cực ngầu.
+Có thể chỉnh số lượng bàn tay, số ngón và độ xòe của ngón trong tab riêng.]])
+
+HelpTab:AddParagraph("Về Bàn tay (Pallet + Thang)",
+[[Chỉ cần lôi ra 5 cái thang và 1 tấm pallet, sau đó bấm nút "Tạo bàn tay":
+Pallet sẽ thành lòng bàn tay và 5 chiếc thang hóa thành 5 ngón tay cực kỳ gọn gàng chỉ với 1 cú bấm.]])
+
+HelpTab:AddParagraph("Về Hai bên song song",
+[[Tạo 2 hình dạng độc lập ở bên trái và bên phải nhân vật của bạn.
+Hỗ trợ các mẫu: Nan hoa tròn, Ngôi sao, Tam giác xoay, Vòng kép. Có thể chỉnh khoảng cách rộng hẹp tùy ý.]])
+
+HelpTab:AddParagraph("Về Mưa sao băng",
+[[Hiệu ứng hầm không gian với các tia sao băng lao vút lên/xuống phía trên đầu. Trông cực đẹp nếu chỉnh số lượng vật phẩm nhiều.]])
+
+HelpTab:AddParagraph("Các hình dạng nâng cao cực mạnh",
+[[・Hố đen → Hiệu ứng xoáy hút vào trong
+・Quỹ đạo Rồng → Quỹ đạo uốn lượn như rồng bay
+・Mắt thần → Tạo hình con mắt lơ lửng
+・Bão tố → Tâm bão xoáy nhiều tầng]])
+
+HelpTab:AddParagraph("Về tính năng Phá rào cản",
+[[Thực hiện tính năng này ở bên ngoài nhà của bạn.
+Có cả bản thường và bản NoTP (không dịch chuyển). Tự động tắt khi thành công.]])
+
+HelpTab:AddParagraph("Về màu bầu trời",
+[[Dùng tab "Màu bầu trời" để đổi không gian ngay lập tức:
+・Đêm / Đêm muộn → Bầu trời tối ảo diệu như trong video
+・Hoàng hôn / Bầu trời xanh / Đỏ / Tím / Xanh lá
+・Đặt lại để trở về mặc định
+Ngoài ra còn có thanh trượt chỉnh độ sáng, thời gian, sương mù và số sao cực kỳ chi tiết.]])
+
+HelpTab:AddParagraph("Gợi ý combo kết hợp",
+[[・Pháo hoa que × Mưa sao băng (Ngước lên nhìn cực đẹp)
+・Pháo hoa que × Hai bên song song (Vòng sáng hai bên vai)
+・Thang gỗ nhạt × Tháp thang đa tầng (Đỉnh cao thẩm mỹ)
+・Thang gỗ nhạt × Bàn tay khổng lồ (Uy lực tuyệt đối)
+・Pallet 1 + Thang 5 × Nút bàn tay (Don giản mà chất)
+・Kết hợp Xoay ① và Xoay ② chạy hai hình cùng lúc
+・Bầu trời đêm + Mưa sao băng hoặc Pháo hoa que (Cực kỳ bắt mắt)]])
+
+task.wait(0.5)
+OrionLib:MakeNotification({
+    Name = "Khởi động thành công",
+    Content = "Đã bật XYTR toy hub! Kiểm tra tab Hướng dẫn để xem chi tiết.",
+    Time = 5
+})

@@ -1,0 +1,209 @@
+-- bakhi hub 🥶🥶🥶
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+local success, Rayfield = pcall(function()
+    return loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+end)
+
+if not success or not Rayfield then
+    warn("bakhi hub: Không thể tải được Rayfield Library!")
+    return
+end
+
+local Window = Rayfield:CreateWindow({
+    Name = "bakhi hub 🥶🥶🥶",
+    LoadingTitle = "Đang khởi động bakhi hub...",
+    LoadingSubtitle = "bakhi hub",
+    ConfigurationSaving = { Enabled = false },
+    KeySystem = false,
+})
+
+-- Tab chính Merge Group để lên đầu
+local Tab = Window:CreateTab("Merge Group", 4483345998)
+
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+
+local selectedParts = {}
+local isSelecting = false
+local isFreezing = false
+local createdGroups = {}
+
+Tab:CreateSection("bakhi hub - Hệ Thống 🥶")
+
+Tab:CreateToggle({
+    Name = "Click chọn đồ",
+    CurrentValue = false,
+    Flag = "SelectMergeGroup",
+    Callback = function(Value)
+        isSelecting = Value
+    end,
+})
+
+Tab:CreateToggle({
+    Name = "Click đóng băng",
+    CurrentValue = false,
+    Flag = "FreezeToggle",
+    Callback = function(Value)
+        isFreezing = Value
+    end,
+})
+
+mouse.Button1Down:Connect(function()
+    local target = mouse.Target
+    if not target or not target:IsA("BasePart") then return end
+    
+    local character = player.Character
+    if character and target:IsDescendantOf(character) then return end
+    
+    if isFreezing then
+        pcall(function()
+            if target:CanSetNetworkOwnership() then
+                target:SetNetworkOwner(player)
+            end
+            target.Anchored = not target.Anchored
+            
+            local statusText = target.Anchored and "Đã đóng băng!" or "Đã mở khóa!"
+            Rayfield:Notify({
+                Title = "bakhi hub 🥶",
+                Content = statusText,
+                Duration = 1,
+                Image = 4483345998,
+            })
+        end)
+        return
+    end
+
+    if isSelecting and not target.Anchored then
+        if target.Size.Magnitude < 120 then
+            local exists = false
+            for _, p in ipairs(selectedParts) do
+                if p == target then exists = true break end
+            end
+            
+            if not exists then
+                table.insert(selectedParts, target)
+                Rayfield:Notify({
+                    Title = "bakhi hub 🥶",
+                    Content = "Đã chọn! Tổng: " .. #selectedParts,
+                    Duration = 1,
+                    Image = 4483345998,
+                })
+            end
+        end
+    end
+end)
+
+Tab:CreateButton({
+    Name = "Group",
+    Callback = function()
+        if #selectedParts < 2 then
+            Rayfield:Notify({
+                Title = "bakhi hub 🥶",
+                Content = "Cần chọn ít nhất 2 món trở lên!",
+                Duration = 2,
+                Image = 4483345998,
+            })
+            return
+        end
+        
+        local mainPart = selectedParts[1]
+        local currentWelds = {}
+        
+        pcall(function()
+            if mainPart:CanSetNetworkOwnership() then
+                mainPart:SetNetworkOwner(player)
+            end
+            mainPart.AssemblyLinearVelocity = Vector3.new(0, 0.1, 0)
+            
+            for i = 2, #selectedParts do
+                local p = selectedParts[i]
+                if p and p.Parent then
+                    if p:CanSetNetworkOwnership() then
+                        p:SetNetworkOwner(player)
+                    end
+                    p.CanCollide = true
+                    p.AssemblyLinearVelocity = Vector3.new(0, 0.1, 0)
+                    
+                    local weld = Instance.new("WeldConstraint")
+                    weld.Part0 = mainPart
+                    weld.Part1 = p
+                    weld.Parent = mainPart
+                    
+                    table.insert(currentWelds, weld)
+                end
+            end
+        end)
+        
+        table.insert(createdGroups, {
+            mainPart = mainPart,
+            welds = currentWelds
+        })
+        
+        Rayfield:Notify({
+            Title = "bakhi hub 🥶🥶🥶",
+            Content = "Đã biến thành 1 khối thành công!",
+            Duration = 3,
+            Image = 4483345998,
+        })
+        
+        selectedParts = {}
+        isSelecting = false
+    end,
+})
+
+Tab:CreateButton({
+    Name = "Gỡ",
+    Callback = function()
+        if #createdGroups == 0 then
+            Rayfield:Notify({
+                Title = "bakhi hub 🥶",
+                Content = "Không có group nào để gỡ!",
+                Duration = 2,
+                Image = 4483345998,
+            })
+            return
+        end
+        
+        local lastGroup = table.remove(createdGroups)
+        if lastGroup and lastGroup.welds then
+            for _, weld in ipairs(lastGroup.welds) do
+                if weld then
+                    weld:Destroy()
+                end
+            end
+        end
+        
+        Rayfield:Notify({
+            Title = "bakhi hub 🥶🥶🥶",
+            Content = "Đã gỡ nhóm vật thể thành công!",
+            Duration = 3,
+            Image = 4483345998,
+        })
+    end,
+})
+
+Tab:CreateButton({
+    Name = "Làm Mới",
+    Callback = function()
+        selectedParts = {}
+        Rayfield:Notify({
+            Title = "bakhi hub",
+            Content = "Đã làm mới danh sách đang chọn!",
+            Duration = 2,
+            Image = 4483345998,
+        })
+    end,
+})
+
+-- Tạo tab Sign để ở cuối
+local SignTab = Window:CreateTab("Sign", 4483345998)
+SignTab:CreateSection("Thông Tin Tác Giả 🥶")
+SignTab:CreateParagraph({
+    Title = "Credit",
+    Content = "credit : hokori_ngot367\n\nbtw: ấn vào đồ ấy đéo phải dùng cái line để chọn đồ"
+})
+
+Rayfield:LoadConfiguration()
